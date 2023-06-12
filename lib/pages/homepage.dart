@@ -1,71 +1,76 @@
+import 'package:call_app_flutter/constants.dart';
+import 'package:call_app_flutter/model/user_model.dart';
+import 'package:call_app_flutter/utilities/localStorer.dart';
+import 'package:call_app_flutter/widgets/incoming_call_widget.dart';
+import 'package:call_app_flutter/widgets/user_tile.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
-import 'call_page.dart';
+import '../utilities/firestorer.dart';
 import 'login.dart';
+import 'register.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
-
+  static const id = '/home';
   @override
   State<HomePage> createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
-  final callId = "hello";
+  final firestorer = Firestorer.instance;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Chats'),
+        actions: [
+          IconButton(
+              onPressed: () {
+                Localstorer.setLoggedInStatus(true);
+                Future.delayed(const Duration(seconds: 1)).then(
+                  (value) => Navigator.pushNamed(context, LoginPage.id),
+                );
+              },
+              icon: const Icon(Icons.logout))
+        ],
       ),
-      body: StreamBuilder(
-          stream: null,
-          builder: (context, snapshot) {
-            return FutureBuilder(
-                future: null,
-                builder: (context, snapshot) {
-                  return Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        ListTile(
-                          tileColor: Colors.pinkAccent.shade200,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          textColor: Colors.white,
-                          title: const Text('zohaib'),
-                          subtitle: const Text('email@gmail.com'),
-                          trailing: FilledButton(
-                            style: FilledButton.styleFrom(
-                                backgroundColor: Colors.purple),
-                            onPressed: () {
-                              Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (context) =>
-                                          CallPage(callId: callId)));
-                            },
-                            child: const Icon(Icons.call, color: Colors.white),
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                });
-          }),
+      body: IncomingCallWidget(
+        child: StreamBuilder(
+            stream: Firestorer.instance.collection.snapshots(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return kSpinner;
+              }
+              return ListView(
+                children: parseUserDocumentsToWidgets(snapshot.data!.docs),
+              );
+            }),
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => LoginPage(),
+              builder: (context) => const RegisterPage(),
             ),
           );
         },
         child: const Icon(Icons.add),
       ),
     );
+  }
+
+  List<Widget> parseUserDocumentsToWidgets(
+      List<QueryDocumentSnapshot<Map<String, dynamic>>> docs) {
+    //convert document into users(MyUser type)
+    List<MyUser> users = docs.map((e) => MyUser.fromJson(e.data())).toList();
+    //don't include current user
+    users = users
+        .where((user) => user.email != Localstorer.currentUser.email)
+        .toList();
+    return users.map((user) {
+      return UserTile(user: user);
+    }).toList();
   }
 }
