@@ -1,3 +1,4 @@
+import 'package:call_app_flutter/constants.dart';
 import 'package:call_app_flutter/pages/login.dart';
 import 'package:call_app_flutter/pages/register.dart';
 import 'package:call_app_flutter/utilities/apputils.dart';
@@ -49,13 +50,19 @@ class _CallAppState extends State<CallApp> {
   void initState() {
     // TODO: implement initState
     super.initState();
-    ZegoUIKitPrebuiltCallInvitationService().init(
+    if (widget.isLoggedIn) {
+      ZegoUIKitPrebuiltCallInvitationService().init(
         appID: AppUtils.kZegoAppId /*input your AppID*/,
         appSign: AppUtils.kZegoAppSignIn /*input your AppSign*/,
         userID: Localstorer.currentUser.id!,
         userName: Localstorer.currentUser.name,
         plugins: [ZegoUIKitSignalingPlugin()],
-        appName: 'CallMe app');
+        appName: 'CallMe app',
+        requireConfig: kUserAvatarBuilderZegoConfig,
+        events: kCallInvitationEvents,
+        ringtoneConfig: kRingtoneCallInvitationConfig,
+      );
+    }
   }
 
   @override

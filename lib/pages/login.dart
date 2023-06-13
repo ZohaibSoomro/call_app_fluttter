@@ -60,12 +60,16 @@ class _LoginPageState extends State<LoginPage> {
       Localstorer.setCurrentUser(user);
       //initializing zego call invitation service
       ZegoUIKitPrebuiltCallInvitationService().init(
-          appID: AppUtils.kZegoAppId /*input your AppID*/,
-          appSign: AppUtils.kZegoAppSignIn /*input your AppSign*/,
-          userID: user.id!,
-          userName: user.name,
-          plugins: [ZegoUIKitSignalingPlugin()],
-          appName: 'CallMe app');
+        appID: AppUtils.kZegoAppId /*input your AppID*/,
+        appSign: AppUtils.kZegoAppSignIn /*input your AppSign*/,
+        userID: user.id!,
+        userName: user.name,
+        plugins: [ZegoUIKitSignalingPlugin()],
+        appName: 'CallMe app',
+        requireConfig: kUserAvatarBuilderZegoConfig,
+        ringtoneConfig: kRingtoneCallInvitationConfig,
+        events: kCallInvitationEvents,
+      );
       Navigator.pushReplacementNamed(
         context,
         HomePage.id,

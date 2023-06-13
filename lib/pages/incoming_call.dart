@@ -1,3 +1,4 @@
+import 'package:call_app_flutter/constants.dart';
 import 'package:call_app_flutter/model/user_model.dart';
 import 'package:call_app_flutter/pages/call_page.dart';
 import 'package:call_app_flutter/utilities/firestorer.dart';
@@ -27,8 +28,7 @@ class IncomingCallPage extends StatelessWidget {
             const SizedBox(height: 16),
             const CircleAvatar(
               radius: 80,
-              backgroundImage: NetworkImage(
-                  'https://th.bing.com/th/id/R.b9941d2d7120044bd1d8e91c5556c131?rik=sDJfLfGGErT9Fg&pid=ImgRaw&r=0'),
+              backgroundImage: NetworkImage(kDummyImage),
             ),
             const SizedBox(height: 16),
             Text(

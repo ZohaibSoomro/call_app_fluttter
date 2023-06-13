@@ -1,9 +1,12 @@
+import 'package:call_app_flutter/constants.dart';
 import 'package:call_app_flutter/utilities/firestorer.dart';
+import 'package:call_app_flutter/utilities/localStorer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:zego_uikit_prebuilt_call/zego_uikit_prebuilt_call.dart';
 
 import '../model/user_model.dart';
+import '../pages/call_page.dart';
 
 class UserTile extends StatelessWidget {
   const UserTile({Key? key, required this.user}) : super(key: key);
@@ -27,7 +30,7 @@ class UserTile extends StatelessWidget {
                 onPressed: () {
                   Firestorer.instance.deleteUser(user);
                 },
-                icon: Icon(
+                icon: const Icon(
                   Icons.delete,
                   color: Colors.white,
                 ),
@@ -48,7 +51,7 @@ class UserTile extends StatelessWidget {
               child: ZegoSendCallInvitationButton(
                 isVideoCall: true,
                 icon: ButtonIcon(
-                  icon: Icon(
+                  icon: const Icon(
                     Icons.video_call,
                     color: Colors.white,
                   ),
@@ -73,7 +76,7 @@ class UserTile extends StatelessWidget {
                 buttonSize: Size(s.width * 0.09, s.height * 0.06),
                 iconSize: Size(s.width * 0.09, s.height * 0.06),
                 icon: ButtonIcon(
-                    icon: Icon(
+                    icon: const Icon(
                   Icons.call,
                   color: Colors.white,
                 )),
@@ -113,18 +116,36 @@ class UserTile extends StatelessWidget {
           children: [
             ListTile(
               tileColor: Colors.blue.shade400,
+              leading: const CircleAvatar(
+                backgroundColor: Colors.grey,
+                backgroundImage: NetworkImage(kDummyImage),
+              ),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10),
               ),
               textColor: Colors.white,
               title: Text(user.name),
               subtitle: Text(user.email),
-              // trailing: Container(
-              //   height: s.height * 0.06,
-              //   color: Colors.red,
-              //   width: s.width * 0.1,
-              //   child:
-              // ),
+              trailing: FilledButton(
+                onPressed: () {
+                  user.callInfo = CallInfo(
+                    status: CallStatus.beingCalled,
+                    caller: Localstorer.currentUser,
+                    timestamp: DateTime.now().toIso8601String(),
+                  );
+                  Firestorer.instance.updateUser(user);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => CallPage(user: user),
+                    ),
+                  );
+                },
+                child: const Icon(
+                  Icons.call,
+                  color: Colors.white,
+                ),
+              ),
             ),
           ],
         ),
