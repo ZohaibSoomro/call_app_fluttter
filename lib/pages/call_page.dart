@@ -1,4 +1,5 @@
 import 'package:call_app_flutter/model/user_model.dart';
+import 'package:call_app_flutter/utilities/apputils.dart';
 import 'package:call_app_flutter/utilities/firestorer.dart';
 import 'package:call_app_flutter/utilities/localStorer.dart';
 import 'package:flutter/material.dart';
@@ -35,9 +36,9 @@ class CallPage extends StatelessWidget {
               user.callInfo = null;
               Firestorer.instance.updateUser(user);
             },
-            appID: 736957510,
-            appSign:
-                "aca7b4ae7589c6b0b2ca570ef6f5ce8eb237dfff16846386c245ce3019082c90",
+            appID:
+                AppUtils.kZegoAppId, //write ur zego cloud project's app id here
+            appSign: AppUtils.kZegoAppSignIn, //& app sign in here
             callID: callId,
             userID: currentUser.id!,
             userName: currentUser.name,
