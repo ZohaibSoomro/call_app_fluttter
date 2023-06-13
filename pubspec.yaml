@@ -24,6 +24,7 @@ dependencies:
   flutter_slidable: ^3.0.0
   fluttertoast: ^8.2.2
   shared_preferences: ^2.1.2
+  flutter_native_splash: ^2.3.1
 
 
 dev_dependencies:
@@ -41,12 +42,21 @@ dev_dependencies:
 # following page: https://dart.dev/tools/pub/pubspec
 
 # The following section is specific to Flutter packages.
+flutter_native_splash:
+  color: "#4763D8"
+  color_dark: "#ffffff"
+  android_12:
+    icon_background_color: "#4763D8"
+    icon_background_color_dark: "#ffffff"
+
 flutter:
 
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
+
+
 
   # To add assets to your application, add an assets section, like this:
   # assets:
