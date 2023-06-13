@@ -5,6 +5,7 @@ import 'package:call_app_flutter/widgets/incoming_call_widget.dart';
 import 'package:call_app_flutter/widgets/user_tile.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:zego_uikit_prebuilt_call/zego_uikit_prebuilt_call.dart';
 
 import '../utilities/firestorer.dart';
 import 'login.dart';
@@ -26,10 +27,13 @@ class _HomePageState extends State<HomePage> {
         title: const Text('Chats'),
         actions: [
           IconButton(
-              onPressed: () {
-                Localstorer.setLoggedInStatus(true);
+              onPressed: () async {
+                Localstorer.setLoggedInStatus(false);
+                //un-initializing zego call invitation service
+                await ZegoUIKitPrebuiltCallInvitationService().uninit();
                 Future.delayed(const Duration(seconds: 1)).then(
-                  (value) => Navigator.pushNamed(context, LoginPage.id),
+                  (value) =>
+                      Navigator.pushReplacementNamed(context, LoginPage.id),
                 );
               },
               icon: const Icon(Icons.logout))

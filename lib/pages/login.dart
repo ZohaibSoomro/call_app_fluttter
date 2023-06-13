@@ -2,11 +2,14 @@
 
 import 'package:call_app_flutter/constants.dart';
 import 'package:call_app_flutter/pages/homepage.dart';
+import 'package:call_app_flutter/utilities/apputils.dart';
 import 'package:call_app_flutter/utilities/firestorer.dart';
 import 'package:call_app_flutter/utilities/localStorer.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:loading_overlay/loading_overlay.dart';
+import 'package:zego_uikit_prebuilt_call/zego_uikit_prebuilt_call.dart';
+import 'package:zego_uikit_signaling_plugin/zego_uikit_signaling_plugin.dart';
 
 import '../model/user_model.dart';
 
@@ -55,6 +58,14 @@ class _LoginPageState extends State<LoginPage> {
       Fluttertoast.showToast(msg: "Login successful");
       Localstorer.setLoggedInStatus(true);
       Localstorer.setCurrentUser(user);
+      //initializing zego call invitation service
+      ZegoUIKitPrebuiltCallInvitationService().init(
+          appID: AppUtils.kZegoAppId /*input your AppID*/,
+          appSign: AppUtils.kZegoAppSignIn /*input your AppSign*/,
+          userID: user.id!,
+          userName: user.name,
+          plugins: [ZegoUIKitSignalingPlugin()],
+          appName: 'CallMe app');
       Navigator.pushReplacementNamed(
         context,
         HomePage.id,

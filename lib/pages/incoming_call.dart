@@ -66,7 +66,6 @@ class IncomingCallPage extends StatelessWidget {
                       MaterialPageRoute(
                         builder: (context) => CallPage(
                           user: caller,
-                          callId: caller.email,
                         ),
                       ),
                     );
