@@ -128,6 +128,10 @@ class UserTile extends StatelessWidget {
               subtitle: Text(user.email),
               trailing: FilledButton(
                 onPressed: () {
+                  if (ZegoUIKitPrebuiltCallMiniOverlayMachine().isMinimizing) {
+                    showMyToast("already in a call.");
+                    return;
+                  }
                   user.callInfo = CallInfo(
                     status: CallStatus.beingCalled,
                     caller: Localstorer.currentUser,

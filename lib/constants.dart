@@ -12,7 +12,7 @@ const kSpinner = SpinKitSpinningLines(
 const kDummyImage =
     'https://th.bing.com/th/id/R.b9941d2d7120044bd1d8e91c5556c131?rik=sDJfLfGGErT9Fg&pid=ImgRaw&r=0';
 
-final kUserAvatarBuilderZegoConfig = (ZegoCallInvitationData data) {
+final kCallWithInvitationConfig = (ZegoCallInvitationData data) {
   var config = (data.invitees.length > 1)
       ? ZegoCallType.videoCall == data.type
           ? ZegoUIKitPrebuiltCallConfig.groupVideoCall()
@@ -31,6 +31,11 @@ final kUserAvatarBuilderZegoConfig = (ZegoCallInvitationData data) {
           )
         : const SizedBox();
   };
+  //minimize button
+  config.topMenuBarConfig.isVisible = true;
+  config.topMenuBarConfig.buttons
+      .insert(0, ZegoMenuBarButtonName.minimizingButton);
+
   config.audioVideoViewConfig = ZegoPrebuiltAudioVideoViewConfig(
     foregroundBuilder:
         (BuildContext context, Size size, ZegoUIKitUser? user, Map extraInfo) {

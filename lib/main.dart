@@ -16,15 +16,12 @@ void main() async {
   bool isLoggedIn = await Localstorer.getLoggedInStatus();
   await Firebase.initializeApp();
   final navigatorKey = GlobalKey<NavigatorState>();
-
-  /// 1.1.2: set navigator key to ZegoUIKitPrebuiltCallInvitationService
   ZegoUIKitPrebuiltCallInvitationService().setNavigatorKey(navigatorKey);
+
   ZegoUIKit().initLog().then((value) {
-    ///  Call the `useSystemCallingUI` method
     ZegoUIKitPrebuiltCallInvitationService().useSystemCallingUI(
       [ZegoUIKitSignalingPlugin()],
     );
-
     runApp(CallApp(isLoggedIn, navigatorKey));
   });
   if (isLoggedIn) {
@@ -48,7 +45,6 @@ class CallApp extends StatefulWidget {
 class _CallAppState extends State<CallApp> {
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     if (widget.isLoggedIn) {
       ZegoUIKitPrebuiltCallInvitationService().init(
@@ -58,7 +54,7 @@ class _CallAppState extends State<CallApp> {
         userName: Localstorer.currentUser.name,
         plugins: [ZegoUIKitSignalingPlugin()],
         appName: 'CallMe app',
-        requireConfig: kUserAvatarBuilderZegoConfig,
+        requireConfig: kCallWithInvitationConfig,
         events: kCallInvitationEvents,
         ringtoneConfig: kRingtoneCallInvitationConfig,
       );
@@ -74,8 +70,23 @@ class _CallAppState extends State<CallApp> {
         RegisterPage.id: (context) => const RegisterPage(),
         HomePage.id: (context) => const HomePage(),
       },
+      initialRoute: widget.isLoggedIn ? HomePage.id : LoginPage.id,
       debugShowCheckedModeBanner: false,
-      home: widget.isLoggedIn ? const HomePage() : const LoginPage(),
+      // home: widget.isLoggedIn ? const HomePage() : const LoginPage(),
+      builder: (BuildContext context, Widget? child) {
+        return Stack(
+          children: [
+            child!,
+
+            ///  Step 3/3: Insert ZegoUIKitPrebuiltCallMiniOverlayPage into Overlay, and return the context of NavigatorState in contextQuery.
+            ZegoUIKitPrebuiltCallMiniOverlayPage(
+              contextQuery: () {
+                return widget.navigatorKey.currentState!.context;
+              },
+            ),
+          ],
+        );
+      },
     );
   }
 }

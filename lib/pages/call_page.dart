@@ -122,6 +122,11 @@ class _CallPageState extends State<CallPage> {
               //     Navigator.pop(context);
               //   }
               // }
+              ..topMenuBarConfig.isVisible = true
+              ..topMenuBarConfig.buttons = [
+                ZegoMenuBarButtonName.minimizingButton,
+                ZegoMenuBarButtonName.showMemberListButton,
+              ]
               ..onOnlySelfInRoom = (context) async {
                 Navigator.pop(context);
               },

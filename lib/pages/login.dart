@@ -66,7 +66,7 @@ class _LoginPageState extends State<LoginPage> {
         userName: user.name,
         plugins: [ZegoUIKitSignalingPlugin()],
         appName: 'CallMe app',
-        requireConfig: kUserAvatarBuilderZegoConfig,
+        requireConfig: kCallWithInvitationConfig,
         ringtoneConfig: kRingtoneCallInvitationConfig,
         events: kCallInvitationEvents,
       );

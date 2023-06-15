@@ -4,6 +4,7 @@ import 'package:call_app_flutter/pages/call_page.dart';
 import 'package:call_app_flutter/utilities/firestorer.dart';
 import 'package:call_app_flutter/utilities/localStorer.dart';
 import 'package:flutter/material.dart';
+import 'package:zego_uikit_prebuilt_call/zego_uikit_prebuilt_call.dart';
 
 class IncomingCallPage extends StatelessWidget {
   final MyUser caller;
@@ -60,6 +61,11 @@ class IncomingCallPage extends StatelessWidget {
                     //     status: CallStatus.inACall,
                     //     timestamp: DateTime.now().toIso8601String());
                     // Firestorer.instance.updateUser(Localstorer.currentUser);
+                    if (ZegoUIKitPrebuiltCallMiniOverlayMachine()
+                        .isMinimizing) {
+                      showMyToast("already in a call.");
+                      return;
+                    }
 
                     Navigator.pushReplacement(
                       context,
