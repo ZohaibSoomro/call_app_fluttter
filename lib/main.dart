@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'package:call_app_flutter/constants.dart';
+import 'package:call_app_flutter/pages/chat_home_page.dart';
 import 'package:call_app_flutter/pages/login.dart';
 import 'package:call_app_flutter/pages/register.dart';
 import 'package:call_app_flutter/utilities/apputils.dart';
@@ -9,6 +10,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:zego_uikit_prebuilt_call/zego_uikit_prebuilt_call.dart';
 import 'package:zego_uikit_signaling_plugin/zego_uikit_signaling_plugin.dart';
+import 'package:zego_zimkit/zego_zimkit.dart';
 
 import 'pages/homepage.dart';
 
@@ -19,16 +21,25 @@ void main() async {
   await Firebase.initializeApp();
   final navigatorKey = GlobalKey<NavigatorState>();
   ZegoUIKitPrebuiltCallInvitationService().setNavigatorKey(navigatorKey);
-
+  ZIMKit().init(
+    appID: AppUtils.kZegoAppId, // your appid
+    appSign: AppUtils.kZegoAppSignIn, // your appSign
+  );
+  if (isLoggedIn) {
+    Localstorer.loadCurrentUser().then((user) {
+      ZIMKit().connectUser(id: user!.id!, name: user.name).then((value) {
+        if (value == 0) {
+          print("user connected to chat app");
+        }
+      });
+    });
+  }
   ZegoUIKit().initLog().then((value) {
     ZegoUIKitPrebuiltCallInvitationService().useSystemCallingUI(
       [ZegoUIKitSignalingPlugin()],
     );
     runApp(CallApp(isLoggedIn, navigatorKey));
   });
-  if (isLoggedIn) {
-    Localstorer.loadCurrentUser();
-  }
 }
 
 class CallApp extends StatefulWidget {
@@ -71,8 +82,9 @@ class _CallAppState extends State<CallApp> {
         LoginPage.id: (context) => const LoginPage(),
         RegisterPage.id: (context) => const RegisterPage(),
         HomePage.id: (context) => const HomePage(),
+        ChatHomePage.id: (context) => const ChatHomePage(),
       },
-      initialRoute: widget.isLoggedIn ? HomePage.id : LoginPage.id,
+      initialRoute: widget.isLoggedIn ? ChatHomePage.id : LoginPage.id,
       debugShowCheckedModeBanner: false,
       // home: widget.isLoggedIn ? const HomePage() : const LoginPage(),
       builder: (BuildContext context, Widget? child) {

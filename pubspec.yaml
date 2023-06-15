@@ -16,7 +16,7 @@ dependencies:
 
   cupertino_icons: ^1.0.2
   zego_uikit_prebuilt_call: ^3.5.2
-  firebase_core: ^2.13.1
+  firebase_core: ^2.14.0
   firebase_auth: ^4.6.2
   cloud_firestore: ^4.8.0
   loading_overlay: ^0.3.0
@@ -39,6 +39,7 @@ dev_dependencies:
 flutter_native_splash:
   color: "#99ccff"
   color_dark: "#99ccff"
+  image: assets/splash.png
   android_12:
     icon_background_color: "#4763D8"
     icon_background_color_dark: "#ffffff"

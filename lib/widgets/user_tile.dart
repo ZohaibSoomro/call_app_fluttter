@@ -4,6 +4,8 @@ import 'package:call_app_flutter/utilities/localStorer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:zego_uikit_prebuilt_call/zego_uikit_prebuilt_call.dart';
+import 'package:zego_zimkit/pages/message_list_page.dart';
+import 'package:zego_zimkit/services/services.dart';
 
 import '../model/user_model.dart';
 import '../pages/call_page.dart';
@@ -115,6 +117,27 @@ class UserTile extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             ListTile(
+              onTap: () {
+                Navigator.push(context, MaterialPageRoute(builder: (context) {
+                  return ZIMKitMessageListPage(
+                    conversationID: user.id!,
+                    conversationType: ZIMConversationType.peer,
+                    appBarBuilder: (context, appBar) {
+                      return AppBar(
+                        title: Row(
+                          children: [
+                            const CircleAvatar(
+                              backgroundImage: NetworkImage(kDummyImage),
+                            ),
+                            const SizedBox(width: 10),
+                            Text(user.name),
+                          ],
+                        ),
+                      );
+                    },
+                  );
+                }));
+              },
               tileColor: Colors.blue.shade400,
               leading: const CircleAvatar(
                 backgroundColor: Colors.grey,

@@ -10,8 +10,9 @@ class Localstorer {
   static const _currentUserText = "user";
   static MyUser? _currentUser;
 
-  static Future loadCurrentUser() async {
+  static Future<MyUser?> loadCurrentUser() async {
     _currentUser = await Localstorer.getCurrentUser();
+    return _currentUser;
   }
 
   static MyUser get currentUser => _currentUser!;

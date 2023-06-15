@@ -1,7 +1,7 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'package:call_app_flutter/constants.dart';
-import 'package:call_app_flutter/pages/homepage.dart';
+import 'package:call_app_flutter/pages/chat_home_page.dart';
 import 'package:call_app_flutter/utilities/apputils.dart';
 import 'package:call_app_flutter/utilities/firestorer.dart';
 import 'package:call_app_flutter/utilities/localStorer.dart';
@@ -10,6 +10,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:loading_overlay/loading_overlay.dart';
 import 'package:zego_uikit_prebuilt_call/zego_uikit_prebuilt_call.dart';
 import 'package:zego_uikit_signaling_plugin/zego_uikit_signaling_plugin.dart';
+import 'package:zego_zimkit/zego_zimkit.dart';
 
 import '../model/user_model.dart';
 
@@ -58,22 +59,19 @@ class _LoginPageState extends State<LoginPage> {
       Fluttertoast.showToast(msg: "Login successful");
       Localstorer.setLoggedInStatus(true);
       Localstorer.setCurrentUser(user);
+      await ZIMKit().connectUser(id: user.id!, name: user.name).then((val) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (context) => const ChatHomePage(),
+          ),
+        );
+      });
       //initializing zego call invitation service
-      ZegoUIKitPrebuiltCallInvitationService().init(
-        appID: AppUtils.kZegoAppId /*input your AppID*/,
-        appSign: AppUtils.kZegoAppSignIn /*input your AppSign*/,
-        userID: user.id!,
-        userName: user.name,
-        plugins: [ZegoUIKitSignalingPlugin()],
-        appName: 'CallMe app',
-        requireConfig: kCallWithInvitationConfig,
-        ringtoneConfig: kRingtoneCallInvitationConfig,
-        events: kCallInvitationEvents,
-      );
-      Navigator.pushReplacementNamed(
-        context,
-        HomePage.id,
-      );
+      initZegoKitService(user);
+      // Navigator.pushReplacementNamed(
+      //   context,
+      //   HomePage.id,
+      // );
     } else {
       Fluttertoast.showToast(
           msg: "Invalid credentials, login failed",
@@ -155,6 +153,20 @@ class _LoginPageState extends State<LoginPage> {
           ),
         ),
       ),
+    );
+  }
+
+  void initZegoKitService(MyUser user) {
+    ZegoUIKitPrebuiltCallInvitationService().init(
+      appID: AppUtils.kZegoAppId /*input your AppID*/,
+      appSign: AppUtils.kZegoAppSignIn /*input your AppSign*/,
+      userID: user.id!,
+      userName: user.name,
+      plugins: [ZegoUIKitSignalingPlugin()],
+      appName: 'CallMe app',
+      requireConfig: kCallWithInvitationConfig,
+      ringtoneConfig: kRingtoneCallInvitationConfig,
+      events: kCallInvitationEvents,
     );
   }
 }
