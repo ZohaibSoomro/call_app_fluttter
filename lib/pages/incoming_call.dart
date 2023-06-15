@@ -1,8 +1,10 @@
+import 'package:call_app_flutter/constants.dart';
 import 'package:call_app_flutter/model/user_model.dart';
 import 'package:call_app_flutter/pages/call_page.dart';
 import 'package:call_app_flutter/utilities/firestorer.dart';
 import 'package:call_app_flutter/utilities/localStorer.dart';
 import 'package:flutter/material.dart';
+import 'package:zego_uikit_prebuilt_call/zego_uikit_prebuilt_call.dart';
 
 class IncomingCallPage extends StatelessWidget {
   final MyUser caller;
@@ -27,8 +29,7 @@ class IncomingCallPage extends StatelessWidget {
             const SizedBox(height: 16),
             const CircleAvatar(
               radius: 80,
-              backgroundImage: NetworkImage(
-                  'https://th.bing.com/th/id/R.b9941d2d7120044bd1d8e91c5556c131?rik=sDJfLfGGErT9Fg&pid=ImgRaw&r=0'),
+              backgroundImage: NetworkImage(kDummyImage),
             ),
             const SizedBox(height: 16),
             Text(
@@ -60,13 +61,17 @@ class IncomingCallPage extends StatelessWidget {
                     //     status: CallStatus.inACall,
                     //     timestamp: DateTime.now().toIso8601String());
                     // Firestorer.instance.updateUser(Localstorer.currentUser);
+                    if (ZegoUIKitPrebuiltCallMiniOverlayMachine()
+                        .isMinimizing) {
+                      showMyToast("already in a call.");
+                      return;
+                    }
 
                     Navigator.pushReplacement(
                       context,
                       MaterialPageRoute(
                         builder: (context) => CallPage(
                           user: caller,
-                          callId: caller.email,
                         ),
                       ),
                     );
