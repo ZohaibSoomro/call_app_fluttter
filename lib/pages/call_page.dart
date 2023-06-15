@@ -19,13 +19,11 @@ class CallPage extends StatefulWidget {
   State<CallPage> createState() => _CallPageState();
 }
 
+//screen sharing option only for my custom call page
 class _CallPageState extends State<CallPage> {
-  ZegoUIKitPrebuiltCallController? callController;
-  @override
-  void initState() {
-    super.initState();
-    callController = ZegoUIKitPrebuiltCallController();
-  }
+  ZegoUIKitPrebuiltCallController? callController =
+      ZegoUIKitPrebuiltCallController();
+  bool isFullscreen = true;
 
   @override
   void dispose() {
@@ -37,101 +35,105 @@ class _CallPageState extends State<CallPage> {
   Widget build(BuildContext context) {
     // setTimeout(context);
     final currentUser = Localstorer.currentUser;
-    return StreamBuilder(
-        stream: Firestorer.instance.collection.doc(widget.user.id).snapshots(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState != ConnectionState.waiting) {
-            print("popo ntho kre ");
-            final user =
-                MyUser.fromJson(snapshot.data!.data() as Map<String, dynamic>);
-            if (user.callInfo?.status == CallStatus.declined) {
-              print("hanre ta kar");
-              Navigator.pop(context);
-            } else {
-              user.callInfo?.status = CallStatus.inACall;
-              Firestorer.instance.updateUser(user);
+    return SafeArea(
+      child: StreamBuilder(
+          stream:
+              Firestorer.instance.collection.doc(widget.user.id).snapshots(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState != ConnectionState.waiting) {
+              print("pop ntho kre ");
+              final user = MyUser.fromJson(
+                  snapshot.data!.data() as Map<String, dynamic>);
+              if (user.callInfo?.status == CallStatus.declined) {
+                print("hanre ta kar");
+                Navigator.pop(context);
+              } else {
+                user.callInfo?.status = CallStatus.inACall;
+                Firestorer.instance.updateUser(user);
+              }
+              print("bus byo cha kre");
             }
-            print("bus byo cha kre");
-          }
-          return ZegoUIKitPrebuiltCall(
-            onDispose: () {
-              widget.user.callInfo = null;
-              Firestorer.instance.updateUser(widget.user);
-            },
-            appID:
-                AppUtils.kZegoAppId, //write ur zego cloud project's app id here
-            appSign: AppUtils.kZegoAppSignIn, //& app sign in here
-            callID: generateCallID(widget.user, currentUser),
-            userID: currentUser.id!,
-            userName: currentUser.name,
-            config: ZegoUIKitPrebuiltCallConfig.oneOnOneVideoCall()
-              ..audioVideoViewConfig = ZegoPrebuiltAudioVideoViewConfig(
-                foregroundBuilder: (BuildContext context, Size size,
+            return ZegoUIKitPrebuiltCall(
+              onDispose: () {
+                widget.user.callInfo = null;
+                Firestorer.instance.updateUser(widget.user);
+              },
+              appID: AppUtils
+                  .kZegoAppId, //write ur zego cloud project's app id here
+              appSign: AppUtils.kZegoAppSignIn, //& app sign in here
+              callID: generateCallID(widget.user, currentUser),
+              userID: currentUser.id!,
+              userName: currentUser.name,
+              config: ZegoUIKitPrebuiltCallConfig.groupVideoCall()
+                ..audioVideoViewConfig = ZegoPrebuiltAudioVideoViewConfig(
+                  foregroundBuilder: (context, size, user, extraInfo) {
+                    // Here is the full-screen mode button.
+                    return Container(
+                      child: OutlinedButton(
+                          onPressed: () {
+                            isFullscreen = !isFullscreen;
+                            callController
+                                ?.showScreenSharingViewInFullscreenMode(
+                                    user?.id ?? '', isFullscreen);
+                            setState(() {});
+                          },
+                          child: const Text('full screen')),
+                    );
+                  },
+                  backgroundBuilder: (BuildContext context, Size size,
+                      ZegoUIKitUser? user, Map extraInfo) {
+                    return user != null
+                        ? Center(
+                            child: ImageFiltered(
+                              imageFilter:
+                                  ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+                              child: const Image(
+                                fit: BoxFit.contain,
+                                image: NetworkImage(kDummyImage),
+                              ),
+                            ),
+                          )
+                        : const SizedBox();
+                  },
+                )
+                ..avatarBuilder = (BuildContext context, Size size,
                     ZegoUIKitUser? user, Map extraInfo) {
                   return user != null
-                      ? Positioned(
-                          bottom: 5,
-                          left: 5,
-                          child: CircleAvatar(
-                            radius: size.height * 0.03,
-                            backgroundColor: Colors.grey,
-                            backgroundImage: const NetworkImage(kDummyImage),
-                          ),
-                        )
-                      : const SizedBox();
-                },
-                backgroundBuilder: (BuildContext context, Size size,
-                    ZegoUIKitUser? user, Map extraInfo) {
-                  return user != null
-                      ? Center(
-                          child: ImageFiltered(
-                            imageFilter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
-                            child: const Image(
-                              fit: BoxFit.contain,
+                      ? Container(
+                          decoration: const BoxDecoration(
+                            shape: BoxShape.circle,
+                            image: DecorationImage(
+                              fit: BoxFit.fill,
                               image: NetworkImage(kDummyImage),
                             ),
                           ),
                         )
                       : const SizedBox();
+                }
+                ..layout = ZegoLayout.gallery(
+                  showScreenSharingFullscreenModeToggleButtonRules:
+                      ZegoShowFullscreenModeToggleButtonRules.alwaysShow,
+                  showNewScreenSharingViewInFullscreenMode: false,
+                )
+                ..bottomMenuBarConfig = ZegoBottomMenuBarConfig(
+                  buttons: [
+                    ZegoMenuBarButtonName.toggleCameraButton,
+                    ZegoMenuBarButtonName.toggleMicrophoneButton,
+                    ZegoMenuBarButtonName.hangUpButton,
+                    ZegoMenuBarButtonName.toggleScreenSharingButton
+                  ],
+                )
+                ..topMenuBarConfig.isVisible = true
+                ..topMenuBarConfig.buttons = [
+                  ZegoMenuBarButtonName.minimizingButton,
+                  ZegoMenuBarButtonName.showMemberListButton,
+                ]
+                ..onOnlySelfInRoom = (context) async {
+                  Navigator.pop(context);
                 },
-              )
-              ..avatarBuilder = (BuildContext context, Size size,
-                  ZegoUIKitUser? user, Map extraInfo) {
-                return user != null
-                    ? Container(
-                        decoration: const BoxDecoration(
-                          shape: BoxShape.circle,
-                          image: DecorationImage(
-                            fit: BoxFit.fill,
-                            image: NetworkImage(kDummyImage),
-                          ),
-                        ),
-                      )
-                    : const SizedBox();
-              }
-              // ..topMenuBarConfig.isVisible = true
-              // ..topMenuBarConfig.buttons = [
-              //   ZegoMenuBarButtonName.minimizingButton,
-              //   ZegoMenuBarButtonName.showMemberListButton,
-              // ]
-              // ..durationConfig.isVisible = true
-              // ..durationConfig.onDurationUpdate = (Duration duration) {
-              //   if (duration.inSeconds >= 15) {
-              //     // showMyToast("Hanging now");
-              //     callController?.hangUp(context);
-              //     Navigator.pop(context);
-              //   }
-              // }
-              ..topMenuBarConfig.isVisible = true
-              ..topMenuBarConfig.buttons = [
-                ZegoMenuBarButtonName.minimizingButton,
-                ZegoMenuBarButtonName.showMemberListButton,
-              ]
-              ..onOnlySelfInRoom = (context) async {
-                Navigator.pop(context);
-              },
-          );
-        });
+            );
+          }),
+    );
   }
 
   void setTimeout(context) {
@@ -173,3 +175,17 @@ class _CallPageState extends State<CallPage> {
     return callID;
   }
 }
+
+// ..topMenuBarConfig.isVisible = true
+// ..topMenuBarConfig.buttons = [
+//   ZegoMenuBarButtonName.minimizingButton,
+//   ZegoMenuBarButtonName.showMemberListButton,
+// ]
+// ..durationConfig.isVisible = true
+// ..durationConfig.onDurationUpdate = (Duration duration) {
+//   if (duration.inSeconds >= 15) {
+//     // showMyToast("Hanging now");
+//     callController?.hangUp(context);
+//     Navigator.pop(context);
+//   }
+// }

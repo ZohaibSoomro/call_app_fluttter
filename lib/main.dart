@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:call_app_flutter/constants.dart';
 import 'package:call_app_flutter/pages/login.dart';
 import 'package:call_app_flutter/pages/register.dart';
@@ -82,6 +84,22 @@ class _CallAppState extends State<CallApp> {
             ZegoUIKitPrebuiltCallMiniOverlayPage(
               contextQuery: () {
                 return widget.navigatorKey.currentState!.context;
+              },
+              borderColor: Colors.red,
+              borderRadius: 12,
+              backgroundBuilder: (BuildContext context, Size size,
+                  ZegoUIKitUser? user, Map extraInfo) {
+                return user != null
+                    ? Center(
+                        child: ImageFiltered(
+                          imageFilter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+                          child: const Image(
+                            fit: BoxFit.fill,
+                            image: NetworkImage(kDummyImage),
+                          ),
+                        ),
+                      )
+                    : const SizedBox();
               },
             ),
           ],

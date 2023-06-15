@@ -21,6 +21,10 @@ final kCallWithInvitationConfig = (ZegoCallInvitationData data) {
           ? ZegoUIKitPrebuiltCallConfig.oneOnOneVideoCall()
           : ZegoUIKitPrebuiltCallConfig.oneOnOneVoiceCall();
 
+  config.onOnlySelfInRoom = (context) {
+    Navigator.pop(context);
+  };
+
   config.avatarBuilder =
       (context, Size size, ZegoUIKitUser? user, Map extraInfo) {
     return user != null
