@@ -11,6 +11,8 @@ const kSpinner = SpinKitSpinningLines(
 );
 const kDummyImage =
     'https://th.bing.com/th/id/R.b9941d2d7120044bd1d8e91c5556c131?rik=sDJfLfGGErT9Fg&pid=ImgRaw&r=0';
+const kLoadingImage =
+    'https://th.bing.com/th?q=Loading+Animation&w=120&h=120&c=1&rs=1&qlt=90&cb=1&dpr=1.5&pid=InlineBlock&mkt=en-WW&cc=PK&setlang=en&adlt=strict&t=1&mw=247';
 
 final kCallWithInvitationConfig = (ZegoCallInvitationData data) {
   var config = (data.invitees.length > 1)

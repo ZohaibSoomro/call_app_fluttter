@@ -36,7 +36,7 @@ class _ChatHomePopupMenuButtonState extends State<ChatHomePopupMenuButton> {
           //un-initializing zego call invitation service
           await ZegoUIKitPrebuiltCallInvitationService().uninit();
           await ZIMKit.instance.disconnectUser();
-          setState(() => isLoggingOut = false); 
+          setState(() => isLoggingOut = false);
           Future.delayed(const Duration(seconds: 1)).then(
             (value) => Navigator.pushReplacementNamed(context, LoginPage.id),
           );
@@ -61,7 +61,7 @@ class _ChatHomePopupMenuButtonState extends State<ChatHomePopupMenuButton> {
           const PopupMenuItem<String>(
             value: 'Join group',
             child: ListTile(
-              leading: Icon(Icons.settings),
+              leading: Icon(Icons.group_add),
               title: Text('Join group'),
             ),
           ),

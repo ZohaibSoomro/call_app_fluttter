@@ -21,7 +21,7 @@ void main() async {
   await Firebase.initializeApp();
   final navigatorKey = GlobalKey<NavigatorState>();
   ZegoUIKitPrebuiltCallInvitationService().setNavigatorKey(navigatorKey);
-  ZIMKit().init(
+  await ZIMKit().init(
     appID: AppUtils.kZegoAppId, // your appid
     appSign: AppUtils.kZegoAppSignIn, // your appSign
   );
