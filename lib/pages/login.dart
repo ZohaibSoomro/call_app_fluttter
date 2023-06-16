@@ -62,7 +62,7 @@ class _LoginPageState extends State<LoginPage> {
       await ZIMKit().connectUser(id: user.id!, name: user.name).then((val) {
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(
-            builder: (context) => const ChatHomePage(),
+            builder: (context) => ChatHomePage(),
           ),
         );
       });

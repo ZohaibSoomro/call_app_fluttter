@@ -44,4 +44,9 @@ class Firestorer {
     await collection.doc(user.id).update(user.toJson());
     print("user ${user.callInfo?.toJson()} updated");
   }
+
+  Future<MyUser> getUserWithId(String senderUserID) async {
+    final doc = await collection.doc(senderUserID).get();
+    return MyUser.fromJson(doc.data() as Map<String, dynamic>);
+  }
 }

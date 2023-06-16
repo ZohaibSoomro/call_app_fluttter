@@ -1,4 +1,5 @@
 import 'package:call_app_flutter/constants.dart';
+import 'package:call_app_flutter/utilities/chat_utils.dart';
 import 'package:call_app_flutter/utilities/firestorer.dart';
 import 'package:call_app_flutter/utilities/localStorer.dart';
 import 'package:flutter/material.dart';
@@ -38,79 +39,25 @@ class UserTile extends StatelessWidget {
                 ),
               ),
             ),
-            // SlidableAction(
-            //   onPressed: (context) {
-            //   },
-            //   backgroundColor: Colors.red,
-            //   foregroundColor: Colors.white,
-            //   icon: Icons.delete,
-            //   label: 'Delete',
-            // ),
-            Container(
-              color: Colors.blue.shade700,
-              width: s.width * 0.15,
-              height: s.height * 0.1,
-              child: ZegoSendCallInvitationButton(
-                isVideoCall: true,
-                icon: ButtonIcon(
-                  icon: const Icon(
-                    Icons.video_call,
-                    color: Colors.white,
-                  ),
+            ChatUtils.zegoCallInvitationButton(
+              s,
+              [
+                ZegoUIKitUser(
+                  id: user.id!,
+                  name: user.name,
                 ),
-                buttonSize: Size(s.width * 0.09, s.height * 0.06),
-                iconSize: Size(s.width * 0.09, s.height * 0.06),
-                resourceID: "zogo_uikit_call", // For offline call notification
-                invitees: [
-                  ZegoUIKitUser(
-                    id: user.id!,
-                    name: user.name,
-                  ),
-                ],
-              ),
+              ],
+              isVideoCall: true,
             ),
-            Container(
-              color: Colors.amber.shade700,
-              width: s.width * 0.15,
-              height: s.height * 0.1,
-              child: ZegoSendCallInvitationButton(
-                isVideoCall: false,
-                buttonSize: Size(s.width * 0.09, s.height * 0.06),
-                iconSize: Size(s.width * 0.09, s.height * 0.06),
-                icon: ButtonIcon(
-                    icon: const Icon(
-                  Icons.call,
-                  color: Colors.white,
-                )),
-                resourceID: "zogo_uikit_call", // For offline call notification
-                invitees: [
-                  ZegoUIKitUser(
-                    id: user.id!,
-                    name: user.name,
-                  ),
-                ],
-              ),
+            ChatUtils.zegoCallInvitationButton(
+              s,
+              [
+                ZegoUIKitUser(
+                  id: user.id!,
+                  name: user.name,
+                ),
+              ],
             ),
-            // SlidableAction(
-            //   onPressed: (context) {
-            //     user.callInfo = CallInfo(
-            //       status: CallStatus.beingCalled,
-            //       caller: Localstorer.currentUser,
-            //       timestamp: DateTime.now().toIso8601String(),
-            //     );
-            //     Firestorer.instance.updateUser(user);
-            //     Navigator.push(
-            //       context,
-            //       MaterialPageRoute(
-            //         builder: (context) => CallPage(user: user),
-            //       ),
-            //     );
-            //   },
-            //   backgroundColor: const Color(0xFF0392CF),
-            //   foregroundColor: Colors.white,
-            //   icon: Icons.call,
-            //   label: 'Call',
-            // ),
           ],
         ),
         child: Column(
@@ -152,7 +99,7 @@ class UserTile extends StatelessWidget {
               trailing: FilledButton(
                 onPressed: () {
                   if (ZegoUIKitPrebuiltCallMiniOverlayMachine().isMinimizing) {
-                    showMyToast("already in a call.");
+                    showMyToast("already in a call.", isError: true);
                     return;
                   }
                   user.callInfo = CallInfo(
@@ -180,3 +127,55 @@ class UserTile extends StatelessWidget {
     );
   }
 }
+
+// SlidableAction(
+//   onPressed: (context) {
+//   },
+//   backgroundColor: Colors.red,
+//   foregroundColor: Colors.white,
+//   icon: Icons.delete,
+//   label: 'Delete',
+// ),
+// Container(
+//   color: Colors.blue.shade700,
+//   width: s.width * 0.15,
+//   height: s.height * 0.1,
+//   child: ZegoSendCallInvitationButton(
+//     isVideoCall: true,
+//     icon: ButtonIcon(
+//       icon: const Icon(
+//         Icons.video_call,
+//         color: Colors.white,
+//       ),
+//     ),
+//     buttonSize: Size(s.width * 0.09, s.height * 0.06),
+//     iconSize: Size(s.width * 0.09, s.height * 0.06),
+//     resourceID: "zogo_uikit_call", // For offline call notification
+//     invitees: [
+//       ZegoUIKitUser(
+//         id: user.id!,
+//         name: user.name,
+//       ),
+//     ],
+//   ),
+// ),
+// SlidableAction(
+//   onPressed: (context) {
+//     user.callInfo = CallInfo(
+//       status: CallStatus.beingCalled,
+//       caller: Localstorer.currentUser,
+//       timestamp: DateTime.now().toIso8601String(),
+//     );
+//     Firestorer.instance.updateUser(user);
+//     Navigator.push(
+//       context,
+//       MaterialPageRoute(
+//         builder: (context) => CallPage(user: user),
+//       ),
+//     );
+//   },
+//   backgroundColor: const Color(0xFF0392CF),
+//   foregroundColor: Colors.white,
+//   icon: Icons.call,
+//   label: 'Call',
+// ),

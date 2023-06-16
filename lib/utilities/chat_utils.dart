@@ -6,8 +6,11 @@ import 'package:http/http.dart' as http;
 import 'package:image_gallery_saver/image_gallery_saver.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
+import 'package:zego_uikit_prebuilt_call/zego_uikit_prebuilt_call.dart';
 
 class ChatUtils {
+  ChatUtils._();
+
   ///saves to device and returns the path of file on device
   static Future<String> saveFileToDevice(
       context, String downloadUrl, String fileName) async {
@@ -77,4 +80,25 @@ class ChatUtils {
       ),
     );
   }
+
+  static Widget zegoCallInvitationButton(Size s, List<ZegoUIKitUser> invitees,
+          {bool isVideoCall = false}) =>
+      Container(
+        color: Colors.blue,
+        width: s.width * 0.15,
+        height: s.height * 0.1,
+        child: ZegoSendCallInvitationButton(
+          isVideoCall: isVideoCall,
+          buttonSize: Size(s.width * 0.09, s.height * 0.06),
+          iconSize: Size(s.width * 0.09, s.height * 0.06),
+          icon: ButtonIcon(
+            icon: Icon(
+              isVideoCall ? Icons.videocam : Icons.call,
+              color: Colors.white,
+            ),
+          ),
+          resourceID: "zogo_uikit_call",
+          invitees: invitees,
+        ),
+      );
 }

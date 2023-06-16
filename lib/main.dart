@@ -82,7 +82,7 @@ class _CallAppState extends State<CallApp> {
         LoginPage.id: (context) => const LoginPage(),
         RegisterPage.id: (context) => const RegisterPage(),
         HomePage.id: (context) => const HomePage(),
-        ChatHomePage.id: (context) => const ChatHomePage(),
+        ChatHomePage.id: (context) => ChatHomePage(),
       },
       initialRoute: widget.isLoggedIn ? ChatHomePage.id : LoginPage.id,
       debugShowCheckedModeBanner: false,
