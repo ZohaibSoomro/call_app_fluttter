@@ -1,4 +1,5 @@
 import 'package:call_app_flutter/constants.dart';
+import 'package:call_app_flutter/utilities/audio_utils.dart';
 import 'package:call_app_flutter/utilities/chat_utils.dart';
 import 'package:call_app_flutter/utilities/firestorer.dart';
 import 'package:call_app_flutter/widgets/chat_home_popup_menu_item.dart';
@@ -6,6 +7,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_emoji_gif_picker/flutter_emoji_gif_picker.dart';
 import 'package:zego_uikit_prebuilt_call/zego_uikit_prebuilt_call.dart';
 import 'package:zego_zimkit/zego_zimkit.dart';
+
+import 'message_list_page.dart';
 
 class ChatHomePage extends StatefulWidget {
   ChatHomePage({Key? key}) : super(key: key);
@@ -15,7 +18,8 @@ class ChatHomePage extends StatefulWidget {
   State<ChatHomePage> createState() => _ChatHomePageState();
 }
 
-class _ChatHomePageState extends State<ChatHomePage> {
+class _ChatHomePageState extends State<ChatHomePage>
+    with SingleTickerProviderStateMixin {
   final node = FocusNode();
 
   final emojiController = TextEditingController();
@@ -24,15 +28,52 @@ class _ChatHomePageState extends State<ChatHomePage> {
 
   bool showEmojiKeyboard = false;
 
+  AnimationController? _animationController;
+  Animation<double>? _animation;
+  bool isRecoding = false;
+  double radiusValue = 15;
+
   @override
   void initState() {
     super.initState();
+    AudioUtils.initAppDirectoryPath();
     node.addListener(() {
       if (node.hasFocus) {
         EmojiGifPickerPanel.close();
         print("msla");
       }
     });
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 1),
+    );
+
+    _animation = Tween<double>(begin: 15, end: 20).animate(
+      CurvedAnimation(
+        parent: _animationController!,
+        curve: Curves.easeInOut,
+      ),
+    );
+
+    _animationController?.addListener(() {
+      setState(() {
+        radiusValue = _animation!.value;
+      });
+    });
+
+    _animation!.addStatusListener((status) {
+      if (status == AnimationStatus.completed) {
+        _animationController!.reverse();
+      } else if (status == AnimationStatus.dismissed) {
+        _animationController!.forward();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _animationController?.dispose();
   }
 
   @override
@@ -65,7 +106,8 @@ class _ChatHomePageState extends State<ChatHomePage> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => zimMessageListPage(context, con),
+                        builder: (context) =>
+                            ZimMessageListPage(conversation: con),
                       ),
                     );
                   },
@@ -93,7 +135,7 @@ class _ChatHomePageState extends State<ChatHomePage> {
           onPressed: (context, conversation, defaultAction) {
             Navigator.push(context, MaterialPageRoute(
               builder: (context) {
-                return zimMessageListPage(context, conversation);
+                return ZimMessageListPage(conversation: conversation);
               },
             ));
           },
@@ -102,7 +144,9 @@ class _ChatHomePageState extends State<ChatHomePage> {
     );
   }
 
-  Widget zimMessageListPage(context, conversation) => EmojiGifMenuLayout(
+  Widget zimMessageListPage(
+          context, StateSetter setState, ZIMKitConversation conversation) =>
+      EmojiGifMenuLayout(
         child: ZIMKitMessageListPage(
           conversationID: conversation.id,
           conversationType: conversation.type,
@@ -282,9 +326,37 @@ class _ChatHomePageState extends State<ChatHomePage> {
           ),
           messageInputActions: [
             ZIMKitMessageInputAction.left(
-              IconButton(
-                icon: const Icon(Icons.mic),
-                onPressed: () {},
+              AnimatedBuilder(
+                animation: _animationController!,
+                builder: (context, child) {
+                  return CircleAvatar(
+                    backgroundColor: Colors.blue,
+                    radius: radiusValue,
+                    child: CircleAvatar(
+                      backgroundColor: Colors.white,
+                      radius: radiusValue - 1,
+                      child: Center(
+                        child: IconButton(
+                          padding: EdgeInsets.zero,
+                          icon: Icon(
+                            Icons.mic,
+                            color: isRecoding ? Colors.red : Colors.blue,
+                          ),
+                          onPressed: () async {
+                            setState(() {
+                              isRecoding = !isRecoding;
+                            });
+                            if (!isRecoding) {
+                              _animationController!.forward();
+                              AudioUtils.recordAudio(
+                                  "${conversation.name}-${DateTime.now().millisecondsSinceEpoch.hashCode}");
+                            }
+                          },
+                        ),
+                      ),
+                    ),
+                  );
+                },
               ),
             ),
             ZIMKitMessageInputAction.leftInside(

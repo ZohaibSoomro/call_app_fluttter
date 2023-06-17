@@ -33,6 +33,9 @@ dependencies:
   image_gallery_saver: ^2.0.2
   record: ^4.4.4
   flutter_emoji_gif_picker: ^0.1.4
+  audio_waveforms: ^1.0.4
+  flutter_audio_waveforms: ^1.2.1+8
+  audioplayers: ^1.2.0
 
 
 dev_dependencies:
