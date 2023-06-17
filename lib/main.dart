@@ -8,6 +8,7 @@ import 'package:call_app_flutter/utilities/apputils.dart';
 import 'package:call_app_flutter/utilities/localStorer.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_emoji_gif_picker/flutter_emoji_gif_picker.dart';
 import 'package:zego_uikit_prebuilt_call/zego_uikit_prebuilt_call.dart';
 import 'package:zego_uikit_signaling_plugin/zego_uikit_signaling_plugin.dart';
 import 'package:zego_zimkit/zego_zimkit.dart';
@@ -20,6 +21,7 @@ void main() async {
   bool isLoggedIn = await Localstorer.getLoggedInStatus();
   await Firebase.initializeApp();
   final navigatorKey = GlobalKey<NavigatorState>();
+  EmojiGifPickerPanel.setup(mode: Mode.light);
   ZegoUIKitPrebuiltCallInvitationService().setNavigatorKey(navigatorKey);
   await ZIMKit().init(
     appID: AppUtils.kZegoAppId, // your appid
@@ -114,6 +116,7 @@ class _CallAppState extends State<CallApp> {
                     : const SizedBox();
               },
             ),
+            EmojiGifMenuStack(),
           ],
         );
       },
