@@ -9,7 +9,7 @@ import 'package:zego_zimkit/zego_zimkit.dart';
 import 'message_list_page.dart';
 
 class ChatHomePage extends StatefulWidget {
-  ChatHomePage({Key? key}) : super(key: key);
+  const ChatHomePage({Key? key}) : super(key: key);
   static const id = "/chatHomePage";
 
   @override
@@ -117,8 +117,8 @@ class _ChatHomePageState extends State<ChatHomePage>
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) =>
-                            ZimMessageListPage(conversation: con),
+                        builder: (context) => MessageListPage(
+                            conversation: con, chatHomeContext: context),
                       ),
                     );
                   },
@@ -146,7 +146,8 @@ class _ChatHomePageState extends State<ChatHomePage>
           onPressed: (context, conversation, defaultAction) {
             Navigator.push(context, MaterialPageRoute(
               builder: (context) {
-                return ZimMessageListPage(conversation: conversation);
+                return MessageListPage(
+                    conversation: conversation, chatHomeContext: context);
               },
             ));
           },

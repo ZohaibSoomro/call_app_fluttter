@@ -7,7 +7,7 @@ import 'package:zego_uikit_prebuilt_call/zego_uikit_prebuilt_call.dart';
 
 const kSpinner = SpinKitSpinningLines(
   color: Colors.blue,
-// size: 50.0,
+  // size: 50.0,
 );
 const kDummyImage =
     'https://th.bing.com/th/id/R.b9941d2d7120044bd1d8e91c5556c131?rik=sDJfLfGGErT9Fg&pid=ImgRaw&r=0';

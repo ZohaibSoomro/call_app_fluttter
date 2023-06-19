@@ -6,7 +6,6 @@ import 'package:call_app_flutter/utilities/chat_utils.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:path/path.dart' as path;
 
-import '../constants.dart';
 import '../widgets/voice_message_widget.dart';
 
 class Firestorer {
@@ -16,7 +15,6 @@ class Firestorer {
   final collection = FirebaseFirestore.instance.collection("callAppUsers");
   Future<void> createUser(MyUser user) async {
     await collection.add(user.toJson()).then((value) {
-      print("Doc added");
       user.id = value.id;
       value.update(user.toJson()).then((value) => print("doc updated"));
     });
@@ -50,7 +48,6 @@ class Firestorer {
 
   Future<void> updateUser(MyUser user) async {
     await collection.doc(user.id).update(user.toJson());
-    print("user ${user.callInfo?.toJson()} updated");
   }
 
   Future<MyUser> getUserWithId(String senderUserID) async {
@@ -78,9 +75,7 @@ class Firestorer {
     final doc = FirebaseFirestore.instance
         .collection("waveForms")
         .doc(path.basename(localPath ?? filePath));
-    await doc
-        .set(waveForms.toJson())
-        .then((value) => showMyToast("Waveform stored"));
+    await doc.set(waveForms.toJson()).then((value) => print("Waveform stored"));
     return waveForms;
   }
 

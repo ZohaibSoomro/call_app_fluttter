@@ -17,7 +17,6 @@ dependencies:
   cupertino_icons: ^1.0.2
   zego_uikit_prebuilt_call: ^3.5.2
   firebase_core: ^2.14.0
-  firebase_auth: ^4.6.2
   cloud_firestore: ^4.8.0
   loading_overlay: ^0.3.0
   flutter_spinkit: ^5.2.0
@@ -31,12 +30,9 @@ dependencies:
   http: ^0.13.6
   path_provider: ^2.0.15
   image_gallery_saver: ^2.0.2
-  record: ^4.4.4
   flutter_emoji_gif_picker: ^0.1.4
   audio_waveforms: ^1.0.3
-  flutter_audio_waveforms: ^1.2.1+8
   audioplayers: ^1.2.0
-  ffmpeg_kit_flutter_full_gpl: ^5.1.0
 
 
 dev_dependencies:

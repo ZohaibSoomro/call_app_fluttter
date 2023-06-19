@@ -10,6 +10,13 @@ import 'package:zego_uikit_prebuilt_call/zego_uikit_prebuilt_call.dart';
 
 class ChatUtils {
   ChatUtils._();
+  static msgBorderRadius(bool isMine) {
+    return BorderRadius.only(
+        topLeft: const Radius.circular(25),
+        topRight: const Radius.circular(25),
+        bottomLeft: isMine ? const Radius.circular(30) : Radius.zero,
+        bottomRight: !isMine ? const Radius.circular(30) : Radius.zero);
+  }
 
   static Widget timeAgoWidget(DateTime? messageTime) {
     if (messageTime == null) {

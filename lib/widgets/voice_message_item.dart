@@ -4,11 +4,8 @@ import 'package:call_app_flutter/constants.dart';
 import 'package:call_app_flutter/utilities/chat_utils.dart';
 import 'package:call_app_flutter/utilities/firestorer.dart';
 import 'package:call_app_flutter/widgets/voice_message_widget.dart';
-import 'package:ffmpeg_kit_flutter_full_gpl/ffmpeg_kit.dart';
-import 'package:ffmpeg_kit_flutter_full_gpl/ffmpeg_session.dart';
-import 'package:ffmpeg_kit_flutter_full_gpl/return_code.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_audio_waveforms/flutter_audio_waveforms.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:path/path.dart' as path;
 import 'package:zego_zimkit/zego_zimkit.dart';
 
@@ -23,9 +20,10 @@ class _VoiceMessageItemState extends State<VoiceMessageItem> {
   PlayerController controller = PlayerController();
   VoiceMessageInfo? voiceInfo;
 
-  final waveFormKey = GlobalKey<AudioWaveformState>();
-  final List<double> speeds = [0.75, 1.0, 1.25, 1.5, 1.75, 2];
+  // final List<double> speeds = [0.75, 1.0, 1.25, 1.5, 1.75, 2];
   int speedIndex = 1;
+
+  Duration maxDuration = Duration.zero;
 
   @override
   void initState() {
@@ -54,7 +52,7 @@ class _VoiceMessageItemState extends State<VoiceMessageItem> {
             Padding(
               padding: EdgeInsets.only(
                   top: MediaQuery.of(context).size.height * 0.075),
-              child: CircleAvatar(
+              child: const CircleAvatar(
                 backgroundImage: NetworkImage(kDummyImage),
               ),
             ),
@@ -83,17 +81,8 @@ class _VoiceMessageItemState extends State<VoiceMessageItem> {
                 ),
               Card(
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.only(
-                    topLeft: const Radius.circular(25),
-                    topRight: const Radius.circular(25),
-                    bottomLeft: widget.message.isMine
-                        ? const Radius.circular(30)
-                        : Radius.zero,
-                    bottomRight: !widget.message.isMine
-                        ? const Radius.circular(30)
-                        : Radius.zero,
-                  ),
-                ),
+                    borderRadius:
+                        ChatUtils.msgBorderRadius(widget.message.isMine)),
                 margin: EdgeInsets.symmetric(
                     horizontal: widget.message.isMine ? 15 : 8),
                 elevation: 2,
@@ -106,26 +95,6 @@ class _VoiceMessageItemState extends State<VoiceMessageItem> {
                         : MainAxisAlignment.start,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      //not working s hidden
-                      if (false)
-                        Padding(
-                          padding: const EdgeInsets.only(left: 8.0),
-                          child: SizedBox(
-                            height: MediaQuery.of(context).size.height * 0.035,
-                            width: MediaQuery.of(context).size.height * 0.07,
-                            child: FilledButton(
-                              style: FilledButton.styleFrom(
-                                  padding: EdgeInsets.zero),
-                              onPressed: () {
-                                setState(() {
-                                  speedIndex = (speedIndex + 1) % speeds.length;
-                                });
-                                changePlaybackSpeed(speeds[speedIndex]);
-                              },
-                              child: Text('${speeds[speedIndex]}x'),
-                            ),
-                          ),
-                        ),
                       SizedBox(
                         height: MediaQuery.of(context).size.height * 0.07,
                         child: IconButton(
@@ -155,28 +124,41 @@ class _VoiceMessageItemState extends State<VoiceMessageItem> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            AudioFileWaveforms(
-                              key: waveFormKey,
-                              size: Size(
-                                  MediaQuery.of(context).size.width * 0.4,
-                                  50.0),
-                              playerController: controller,
-                              enableSeekGesture: true,
-                              backgroundColor: Colors.black,
-                              waveformType: WaveformType.long,
-                              waveformData: controller.waveformData,
-                              playerWaveStyle: const PlayerWaveStyle(
-                                fixedWaveColor: Colors.blue,
-                                liveWaveColor: Colors.red,
-                                seekLineColor: Colors.blue,
-                                spacing: 7,
-                                backgroundColor: Colors.black,
-                                waveThickness: 2,
-                                scaleFactor: 500,
-                              ),
+                            FutureBuilder(
+                                future: Firestorer.instance.getVoiceNoteInfo(
+                                    path.basename(widget
+                                        .message.fileContent!.fileLocalPath)),
+                                builder: (context, snap) {
+                                  if (!snap.hasData) {
+                                    return const SpinKitSpinningLines(
+                                      color: Colors.blue,
+                                      size: 25.0,
+                                    );
+                                  }
+                                  return AudioFileWaveforms(
+                                    size: Size(
+                                        MediaQuery.of(context).size.width * 0.4,
+                                        50.0),
+                                    playerController: controller,
+                                    enableSeekGesture: true,
+                                    backgroundColor: Colors.black,
+                                    waveformType: WaveformType.long,
+                                    waveformData: snap.data!
+                                        .waveFormsList, //controller.waveformData,
+                                    playerWaveStyle: const PlayerWaveStyle(
+                                      fixedWaveColor: Colors.blue,
+                                      liveWaveColor: Colors.red,
+                                      seekLineColor: Colors.blue,
+                                      spacing: 7,
+                                      backgroundColor: Colors.black,
+                                      waveThickness: 2,
+                                      scaleFactor: 500,
+                                    ),
+                                  );
+                                }),
+                            Text(
+                              formatDuration(maxDuration),
                             ),
-                            Text(formatDuration(Duration(
-                                milliseconds: controller.maxDuration))),
                           ],
                         ),
                       ),
@@ -194,6 +176,28 @@ class _VoiceMessageItemState extends State<VoiceMessageItem> {
               ),
             ],
           ),
+          const SizedBox(width: 5),
+          if (widget.message.isMine)
+            widget.message.info.sentStatus == ZIMMessageSentStatus.sending
+                ? const SpinKitSpinningLines(
+                    color: Colors.blue,
+                    size: 10.0,
+                  )
+                : CircleAvatar(
+                    radius: 7,
+                    backgroundColor: widget.message.info.sentStatus ==
+                            ZIMMessageSentStatus.success
+                        ? Colors.blue
+                        : Colors.red,
+                    child: Icon(
+                      widget.message.info.sentStatus ==
+                              ZIMMessageSentStatus.success
+                          ? Icons.check
+                          : Icons.close,
+                      size: 10,
+                      color: Colors.white,
+                    ),
+                  ),
         ],
       ),
     );
@@ -208,11 +212,13 @@ class _VoiceMessageItemState extends State<VoiceMessageItem> {
         widget.message.fileContent!.fileLocalPath,
         widget.message.fileContent!.fileDownloadUrl);
     if (mounted) setState(() {});
-
-// Or directly extract from preparePlayer and initialise audio player
     controller.updateFrequency = UpdateFrequency.low;
     await controller.preparePlayer(
-        path: filePath, shouldExtractWaveform: true, volume: 1.0);
+        path: filePath, shouldExtractWaveform: false, volume: 1.0);
+    maxDuration = Duration(milliseconds: controller.maxDuration);
+    if (mounted) {
+      setState(() {});
+    }
     controller.onCompletion.listen((event) async {
       await controller.seekTo(0);
       await controller.pausePlayer();
@@ -241,41 +247,61 @@ class _VoiceMessageItemState extends State<VoiceMessageItem> {
     }
 
     formattedDuration += "${twoDigits(duration.inMinutes.remainder(60))}:";
-    formattedDuration += "${twoDigits(duration.inSeconds.remainder(60))}";
+    formattedDuration += twoDigits(duration.inSeconds.remainder(60));
 
     return formattedDuration;
   }
-
-  void changePlaybackSpeed(double speed) async {
-    await controller.pausePlayer();
-
-    final ext = path.extension(voiceInfo!.localPath);
-    final outputPath =
-        "${voiceInfo!.localPath.substring(0, voiceInfo!.localPath.indexOf('.'))}fast$ext";
-    final command =
-        "-i ${voiceInfo!.localPath} -filter:a \"atempo=$speed\" -vn $outputPath";
-
-    final session =
-        await FFmpegKit.execute(command).onError((error, stackTrace) {
-      print("ffmpeg stdout:$error");
-      print("ffmpeg stderr:$stackTrace");
-      return FFmpegSession();
-    });
-    print("Logs: ");
-    (await session.getLogs()).forEach((element) {
-      print("Log: ${element.getMessage()}");
-    });
-    if (ReturnCode.isSuccess(await session.getReturnCode())) {
-      print("Playback speed changed successfully!");
-      showMyToast('fileSavedAt: $outputPath');
-      await initController(outputPath);
-      await controller.startPlayer(finishMode: FinishMode.pause);
-      if (mounted) {
-        setState(() {});
-      }
-    } else {
-      showMyToast('some error occured while playback speed.');
-      print("Error changing playback speed: ${await session.getReturnCode()}");
-    }
-  }
 }
+
+// //not working s hidden
+//                       if (false)
+//                         Padding(
+//                           padding: const EdgeInsets.only(left: 8.0),
+//                           child: SizedBox(
+//                             height: MediaQuery.of(context).size.height * 0.035,
+//                             width: MediaQuery.of(context).size.height * 0.07,
+//                             child: FilledButton(
+//                               style: FilledButton.styleFrom(
+//                                   padding: EdgeInsets.zero),
+//                               onPressed: () {
+//                                 setState(() {
+//                                   speedIndex = (speedIndex + 1) % speeds.length;
+//                                 });
+//                                 changePlaybackSpeed(speeds[speedIndex]);
+//                               },
+//                               child: Text('${speeds[speedIndex]}x'),
+//                             ),
+//                           ),
+//                         ),
+// void changePlaybackSpeed(double speed) async {
+//     await controller.pausePlayer();
+//
+//     final ext = path.extension(voiceInfo!.localPath);
+//     final outputPath =
+//         "${voiceInfo!.localPath.substring(0, voiceInfo!.localPath.indexOf('.'))}fast$ext";
+//     final command =
+//         "-i ${voiceInfo!.localPath} -filter:a \"atempo=$speed\" -vn $outputPath";
+//
+//     final session =
+//         await FFmpegKit.execute(command).onError((error, stackTrace) {
+//       print("ffmpeg stdout:$error");
+//       print("ffmpeg stderr:$stackTrace");
+//       return FFmpegSession();
+//     });
+//     print("Logs: ");
+//     (await session.getLogs()).forEach((element) {
+//       print("Log: ${element.getMessage()}");
+//     });
+//     if (ReturnCode.isSuccess(await session.getReturnCode())) {
+//       print("Playback speed changed successfully!");
+//       showMyToast('fileSavedAt: $outputPath');
+//       await initController(outputPath);
+//       await controller.startPlayer(finishMode: FinishMode.pause);
+//       if (mounted) {
+//         setState(() {});
+//       }
+//     } else {
+//       showMyToast('some error occured while playback speed.');
+//       print("Error changing playback speed: ${await session.getReturnCode()}");
+//     }
+//   }

@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'dart:io';
 
 import 'package:call_app_flutter/constants.dart';
@@ -8,19 +10,21 @@ import 'package:call_app_flutter/widgets/voice_message_item.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_emoji_gif_picker/flutter_emoji_gif_picker.dart';
 import 'package:zego_uikit_prebuilt_call/zego_uikit_prebuilt_call.dart';
-import 'package:zego_zimkit/compnents/messages/widgets/pick_file_button.dart';
 import 'package:zego_zimkit/zego_zimkit.dart';
 
-class ZimMessageListPage extends StatefulWidget {
-  const ZimMessageListPage({Key? key, required this.conversation})
-      : super(key: key);
+import '../widgets/confirmation_dialog.dart';
 
+class MessageListPage extends StatefulWidget {
+  const MessageListPage(
+      {Key? key, required this.conversation, required this.chatHomeContext})
+      : super(key: key);
+  final BuildContext chatHomeContext;
   final ZIMKitConversation conversation;
   @override
-  State<ZimMessageListPage> createState() => _ZimMessageListPageState();
+  State<MessageListPage> createState() => _MessageListPageState();
 }
 
-class _ZimMessageListPageState extends State<ZimMessageListPage>
+class _MessageListPageState extends State<MessageListPage>
     with SingleTickerProviderStateMixin {
   final node = FocusNode();
   final emojiController = TextEditingController();
@@ -51,7 +55,7 @@ class _ZimMessageListPageState extends State<ZimMessageListPage>
       duration: const Duration(seconds: 1),
     );
 
-    _animation = Tween<double>(begin: 16, end: 25).animate(
+    _animation = Tween<double>(begin: 16, end: 30).animate(
       CurvedAnimation(
         parent: _animationController!,
         curve: Curves.easeInOut,
@@ -59,14 +63,15 @@ class _ZimMessageListPageState extends State<ZimMessageListPage>
     );
 
     _animationController?.addListener(() {
-      setState(() {
-        if (!isRecording) {
-          _animationController!.stop();
-          radiusValue = 16;
-        } else {
-          radiusValue = _animation!.value;
-        }
-      });
+      if (!isRecording) {
+        _animationController!.stop();
+        radiusValue = 16;
+      } else {
+        radiusValue = _animation!.value;
+      }
+      if (mounted) {
+        setState(() {});
+      }
     });
 
     _animation!.addStatusListener((status) {
@@ -105,7 +110,19 @@ class _ZimMessageListPageState extends State<ZimMessageListPage>
             //   isMyMessage: isMyMessage,
             //   msgBaseInfo: message.info,
             // );
-            return VoiceMessageItem(message: message);
+            return InkWell(
+                borderRadius: ChatUtils.msgBorderRadius(message.isMine),
+                onLongPress: () {
+                  showDialog(
+                      context: context,
+                      builder: (context) => ConfirmationDialog(
+                            onConfirm: () {
+                              ZIMKit.instance.deleteMessage([message]).then(
+                                  (value) => showMyToast("Msg deleted"));
+                            },
+                          ));
+                },
+                child: VoiceMessageItem(message: message));
           }
           if (message.type != ZIMMessageType.text) {
             return defaultWidget;
@@ -308,7 +325,7 @@ class _ZimMessageListPageState extends State<ZimMessageListPage>
       animation: _animationController!,
       builder: (context, child) {
         return CircleAvatar(
-          radius: 26,
+          radius: 30,
           backgroundColor: Colors.transparent,
           child: CircleAvatar(
             backgroundColor: isRecording ? Colors.red : Colors.transparent,
@@ -318,13 +335,13 @@ class _ZimMessageListPageState extends State<ZimMessageListPage>
               radius: radiusValue - 1,
               child: CircleAvatar(
                 radius: 15,
-                backgroundColor: Colors.red.withOpacity(isRecording ? 0.2 : 0),
+                backgroundColor: Colors.red.withOpacity(isRecording ? 0.1 : 0),
                 child: Center(
                   child: IconButton(
                     padding: EdgeInsets.zero,
-                    icon: const Icon(
+                    icon: Icon(
                       Icons.mic,
-                      color: Colors.black,
+                      color: isRecording ? Colors.white : Colors.black,
                     ),
                     onPressed: startRecording,
                   ),
@@ -348,20 +365,44 @@ class _ZimMessageListPageState extends State<ZimMessageListPage>
       audioPath = await AudioUtils.stopRecording();
       showMyToast("audio file saved at $audioPath");
       final file = File(audioPath!);
-      PlatformFile platformFile = PlatformFile(
-        name: file.path.split('/').last,
-        path: file.absolute.path,
-        size: file.lengthSync(),
-        bytes: file.readAsBytesSync(),
-      );
+      // PlatformFile platformFile = PlatformFile(
+      //   name: file.path.split('/').last,
+      //   path: file.absolute.path,
+      //   size: file.lengthSync(),
+      //   bytes: file.readAsBytesSync(),
+      // );
       print("audio file saved at $audioPath");
-      await ZIMKit.instance.sendFileMessage(
+      // await ZIMKit.instance.sendFileMessage(
+      //   widget.conversation.id,
+      //   widget.conversation.type,
+      //   [platformFile],
+      // );
+      _animationController!.reset();
+      isRecording = false;
+      if (mounted) {
+        setState(() {});
+      }
+      await ZIMKitCore.instance.sendMediaMessage(
         widget.conversation.id,
         widget.conversation.type,
-        [platformFile],
-      ).then((value) => showMyToast("File sent"));
-
-      isRecording = false;
+        file.path,
+        ZIMMessageType.file,
+        onMessageSent: (msg) async {
+          await Firestorer.instance.storeVoiceInfo(context,
+              msg.fileContent!.fileLocalPath, msg.fileContent!.fileDownloadUrl);
+          if (mounted) {
+            setState(() {});
+          }
+          Navigator.pop(context);
+          Navigator.push(
+              widget.chatHomeContext,
+              MaterialPageRoute(
+                  builder: (context) => MessageListPage(
+                        conversation: widget.conversation,
+                        chatHomeContext: widget.chatHomeContext,
+                      )));
+        },
+      );
     }
     if (mounted) {
       setState(() {});
