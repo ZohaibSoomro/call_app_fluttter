@@ -11,6 +11,40 @@ import 'package:zego_uikit_prebuilt_call/zego_uikit_prebuilt_call.dart';
 class ChatUtils {
   ChatUtils._();
 
+  static Widget timeAgoWidget(DateTime? messageTime) {
+    if (messageTime == null) {
+      return const SizedBox.shrink();
+    }
+    final now = DateTime.now();
+    final duration = DateTime.now().difference(messageTime);
+
+    late String timeStr;
+
+    if (duration.inMinutes < 1) {
+      timeStr = 'just now';
+    } else if (duration.inHours < 1) {
+      timeStr = '${duration.inMinutes} minutes ago';
+    } else if (duration.inDays < 1) {
+      timeStr = '${duration.inHours} hours ago';
+    } else if (now.year == messageTime.year) {
+      timeStr =
+          '${messageTime.month}/${messageTime.day} ${messageTime.hour}:${messageTime.minute}';
+    } else {
+      timeStr =
+          ' ${messageTime.year}/${messageTime.month}/${messageTime.day} ${messageTime.hour}:${messageTime.minute}';
+    }
+
+    return Opacity(
+      opacity: 0.64,
+      child: Text(
+        timeStr,
+        maxLines: 1,
+        overflow: TextOverflow.clip,
+        style: const TextStyle(fontSize: 12),
+      ),
+    );
+  }
+
   ///saves to device and returns the path of file on device
   static Future<String> saveFileToDevice(
       context, String downloadUrl, String fileName) async {

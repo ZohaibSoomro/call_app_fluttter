@@ -1,7 +1,5 @@
 import 'dart:convert';
 
-import 'package:audio_waveforms/audio_waveforms.dart';
-import 'package:call_app_flutter/constants.dart';
 import 'package:call_app_flutter/model/user_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -15,20 +13,6 @@ class Localstorer {
   static Future<MyUser?> loadCurrentUser() async {
     _currentUser = await Localstorer.getCurrentUser();
     return _currentUser;
-  }
-
-  static Future<bool> storeWaveFormData(String filePath) async {
-    final waveFormData =
-        await PlayerController().extractWaveformData(path: filePath);
-    showMyToast("Waveform stored");
-    return prefs.setStringList(
-        filePath, waveFormData.map((e) => e.toString()).toList());
-  }
-
-  static List<double>? getWaveFormData(path) {
-    final list = prefs.getStringList(path);
-    if (list == null) return null;
-    return list.map((e) => double.parse(e)).toList();
   }
 
   static MyUser get currentUser => _currentUser!;

@@ -1,17 +1,15 @@
 import 'dart:io';
 
-import 'package:audio_waveforms/audio_waveforms.dart';
 import 'package:call_app_flutter/constants.dart';
 import 'package:call_app_flutter/utilities/audio_utils.dart';
 import 'package:call_app_flutter/utilities/chat_utils.dart';
 import 'package:call_app_flutter/utilities/firestorer.dart';
+import 'package:call_app_flutter/widgets/voice_message_item.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_emoji_gif_picker/flutter_emoji_gif_picker.dart';
 import 'package:zego_uikit_prebuilt_call/zego_uikit_prebuilt_call.dart';
 import 'package:zego_zimkit/compnents/messages/widgets/pick_file_button.dart';
 import 'package:zego_zimkit/zego_zimkit.dart';
-
-import '../utilities/localStorer.dart';
 
 class ZimMessageListPage extends StatefulWidget {
   const ZimMessageListPage({Key? key, required this.conversation})
@@ -100,81 +98,14 @@ class _ZimMessageListPageState extends State<ZimMessageListPage>
           if (message.type == ZIMMessageType.file &&
               (file!.fileName.endsWith(".wav") ||
                   file.fileName.endsWith(".m4a"))) {
-            final waveForms = Localstorer.getWaveFormData(file.fileLocalPath);
-            print("Audio waveforms: '$waveForms'");
-            final future = AudioUtils.controllerForAudioFile(
-              file.fileLocalPath,
-            );
-            PlayerState playerState = PlayerState.initialized;
-            return FutureBuilder(
-                future: future,
-                builder: (context, snap) {
-                  if (!snap.hasData) return defaultWidget;
-                  snap.data!.onPlayerStateChanged.listen((state) {
-                    setState(() {
-                      playerState = state;
-                    });
-                  });
-                  snap.data!.onCompletion.listen((_) async {
-                    snap.data!.seekTo(0);
-                    await snap.data!.preparePlayer(path: file.fileLocalPath);
-                    setState(() {});
-                  });
-                  return Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Stack(
-                      fit: StackFit.loose,
-                      children: [
-                        AudioFileWaveforms(
-                          size: Size(MediaQuery.of(context).size.width,
-                              MediaQuery.of(context).size.height * 0.1),
-                          playerController: snap.data!,
-                          continuousWaveform: true,
-                          enableSeekGesture: true,
-                          backgroundColor: Colors.blue,
-                          waveformType: WaveformType.long,
-                          waveformData: waveForms ?? [],
-                          playerWaveStyle: const PlayerWaveStyle(
-                            fixedWaveColor: Colors.red,
-                            liveWaveColor: Colors.blueAccent,
-                            spacing: 6,
-                            backgroundColor: Colors.lightBlue,
-                            seekLineColor: Colors.red,
-                            scaleFactor: 400,
-                            waveThickness: 2.2,
-                          ),
-                        ),
-                        Positioned(
-                          right: MediaQuery.of(context).size.width * 0.39,
-                          bottom: 2,
-                          child: IconButton(
-                            onPressed: () async {
-                              if (playerState == PlayerState.playing) {
-                                await snap.data!
-                                    .pausePlayer(); // Pause audio player
-                              } else {
-                                snap.data!.stopAllPlayers();
-                                await snap.data!
-                                    .preparePlayer(path: file.fileLocalPath);
-                                await snap.data!.startPlayer(
-                                    finishMode:
-                                        FinishMode.pause); // Start audio player
-                                await snap.data!.setVolume(1.0);
-                              }
-                            },
-                            icon: Icon(
-                              playerState == PlayerState.playing
-                                  ? Icons.pause
-                                  : Icons.play_arrow,
-                              color: Colors.red,
-                              size: 50,
-                            ),
-                          ),
-                        )
-                      ],
-                    ),
-                  );
-                });
+            // return VoiceMessageWidget(
+            //   filePath: file.fileLocalPath,
+            //   downloadUrl: file.fileDownloadUrl,
+            //   defaultWidget: defaultWidget,
+            //   isMyMessage: isMyMessage,
+            //   msgBaseInfo: message.info,
+            // );
+            return VoiceMessageItem(message: message);
           }
           if (message.type != ZIMMessageType.text) {
             return defaultWidget;
@@ -280,7 +211,7 @@ class _ZimMessageListPageState extends State<ZimMessageListPage>
                 ),
               ),
               const SizedBox(height: 5),
-              timeAgoWidget(
+              ChatUtils.timeAgoWidget(
                 DateTime.fromMillisecondsSinceEpoch(message.info.timestamp),
               ),
             ],
@@ -406,40 +337,6 @@ class _ZimMessageListPageState extends State<ZimMessageListPage>
     );
   }
 
-  Widget timeAgoWidget(DateTime? messageTime) {
-    if (messageTime == null) {
-      return const SizedBox.shrink();
-    }
-    final now = DateTime.now();
-    final duration = DateTime.now().difference(messageTime);
-
-    late String timeStr;
-
-    if (duration.inMinutes < 1) {
-      timeStr = 'just now';
-    } else if (duration.inHours < 1) {
-      timeStr = '${duration.inMinutes} minutes ago';
-    } else if (duration.inDays < 1) {
-      timeStr = '${duration.inHours} hours ago';
-    } else if (now.year == messageTime.year) {
-      timeStr =
-          '${messageTime.month}/${messageTime.day} ${messageTime.hour}:${messageTime.minute}';
-    } else {
-      timeStr =
-          ' ${messageTime.year}/${messageTime.month}/${messageTime.day} ${messageTime.hour}:${messageTime.minute}';
-    }
-
-    return Opacity(
-      opacity: 0.64,
-      child: Text(
-        timeStr,
-        maxLines: 1,
-        overflow: TextOverflow.clip,
-        style: const TextStyle(fontSize: 12),
-      ),
-    );
-  }
-
   void startRecording() async {
     final status = await AudioUtils.isRecording();
     if (!status) {
@@ -463,6 +360,7 @@ class _ZimMessageListPageState extends State<ZimMessageListPage>
         widget.conversation.type,
         [platformFile],
       ).then((value) => showMyToast("File sent"));
+
       isRecording = false;
     }
     if (mounted) {
@@ -499,3 +397,77 @@ class _ZimMessageListPageState extends State<ZimMessageListPage>
     defaultAction();
   }
 }
+
+// final future = AudioUtils.controllerForAudioFile(
+//               file.fileLocalPath,
+//             );
+//             PlayerState playerState = PlayerState.initialized;
+//             return FutureBuilder(
+//                 future: future,
+//                 builder: (context, snap) {
+//                   if (!snap.hasData) return defaultWidget;
+//                   snap.data!.onPlayerStateChanged.listen((state) {
+//                     setState(() {
+//                       playerState = state;
+//                     });
+//                   });
+//                   snap.data!.onCompletion.listen((_) async {
+//                     snap.data!.seekTo(0);
+//                     await snap.data!.preparePlayer(path: file.fileLocalPath);
+//                     setState(() {});
+//                   });
+//                   return Padding(
+//                     padding: const EdgeInsets.all(8.0),
+//                     child: Stack(
+//                       fit: StackFit.loose,
+//                       children: [
+//                         AudioFileWaveforms(
+//                           size: Size(MediaQuery.of(context).size.width,
+//                               MediaQuery.of(context).size.height * 0.1),
+//                           playerController: snap.data!,
+//                           continuousWaveform: true,
+//                           enableSeekGesture: true,
+//                           backgroundColor: Colors.blue,
+//                           waveformType: WaveformType.long,
+//                           waveformData: waveForms ?? [],
+//                           playerWaveStyle: const PlayerWaveStyle(
+//                             fixedWaveColor: Colors.red,
+//                             liveWaveColor: Colors.blueAccent,
+//                             spacing: 6,
+//                             backgroundColor: Colors.lightBlue,
+//                             seekLineColor: Colors.red,
+//                             scaleFactor: 400,
+//                             waveThickness: 2.2,
+//                           ),
+//                         ),
+//                         Positioned(
+//                           right: MediaQuery.of(context).size.width * 0.39,
+//                           bottom: 2,
+//                           child: IconButton(
+//                             onPressed: () async {
+//                               if (playerState == PlayerState.playing) {
+//                                 await snap.data!
+//                                     .pausePlayer(); // Pause audio player
+//                               } else {
+//                                 snap.data!.stopAllPlayers();
+//                                 await snap.data!
+//                                     .preparePlayer(path: file.fileLocalPath);
+//                                 await snap.data!.startPlayer(
+//                                     finishMode:
+//                                         FinishMode.pause); // Start audio player
+//                                 await snap.data!.setVolume(1.0);
+//                               }
+//                             },
+//                             icon: Icon(
+//                               playerState == PlayerState.playing
+//                                   ? Icons.pause
+//                                   : Icons.play_arrow,
+//                               color: Colors.red,
+//                               size: 50,
+//                             ),
+//                           ),
+//                         )
+//                       ],
+//                     ),
+//                   );
+//                 },);

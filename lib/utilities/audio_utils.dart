@@ -3,7 +3,6 @@ import 'dart:io';
 
 import 'package:audio_waveforms/audio_waveforms.dart';
 import 'package:call_app_flutter/constants.dart';
-import 'package:call_app_flutter/utilities/localStorer.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
 
@@ -30,7 +29,6 @@ class AudioUtils {
   ///Stops recording and  Returns the output path.
   static Future<String?> stopRecording() async {
     final path = await _recorder.stop();
-    Localstorer.storeWaveFormData(path!);
     _recorder.refresh();
     return path;
   }

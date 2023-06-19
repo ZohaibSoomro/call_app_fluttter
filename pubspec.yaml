@@ -33,9 +33,10 @@ dependencies:
   image_gallery_saver: ^2.0.2
   record: ^4.4.4
   flutter_emoji_gif_picker: ^0.1.4
-  audio_waveforms: ^1.0.4
+  audio_waveforms: ^1.0.3
   flutter_audio_waveforms: ^1.2.1+8
   audioplayers: ^1.2.0
+  ffmpeg_kit_flutter_full_gpl: ^5.1.0
 
 
 dev_dependencies:
@@ -45,11 +46,11 @@ dev_dependencies:
   flutter_lints: ^2.0.0
 
 flutter_native_splash:
-  color: "#99ccff"
-  color_dark: "#99ccff"
+  color: "#ffffff"
+  color_dark: "#ffffff"
   image: assets/splash.png
   android_12:
-    icon_background_color: "#4763D8"
+    icon_background_color: "#ffffff"
     icon_background_color_dark: "#ffffff"
 
 flutter:

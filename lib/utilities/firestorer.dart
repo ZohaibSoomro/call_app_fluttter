@@ -1,5 +1,13 @@
+import 'dart:io';
+
+import 'package:audio_waveforms/audio_waveforms.dart';
 import 'package:call_app_flutter/model/user_model.dart';
+import 'package:call_app_flutter/utilities/chat_utils.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:path/path.dart' as path;
+
+import '../constants.dart';
+import '../widgets/voice_message_widget.dart';
 
 class Firestorer {
   static final instance = Firestorer._();
@@ -48,5 +56,41 @@ class Firestorer {
   Future<MyUser> getUserWithId(String senderUserID) async {
     final doc = await collection.doc(senderUserID).get();
     return MyUser.fromJson(doc.data() as Map<String, dynamic>);
+  }
+
+  ///if file not exist, download it and save it
+  Future<VoiceMessageInfo> storeVoiceInfo(
+      context, String filePath, String downloadUrl) async {
+    final file = File(filePath);
+    String? localPath;
+    if (!await file.exists()) {
+      String fileName = path.basename(filePath);
+      localPath =
+          await ChatUtils.saveFileToDevice(context, downloadUrl, fileName);
+    }
+    final waveFormData = await PlayerController()
+        .extractWaveformData(path: localPath ?? filePath);
+    final waveForms = VoiceMessageInfo(
+      localPath: localPath ?? filePath,
+      waveFormsList: waveFormData,
+      remoteUrl: downloadUrl,
+    );
+    final doc = FirebaseFirestore.instance
+        .collection("waveForms")
+        .doc(path.basename(localPath ?? filePath));
+    await doc
+        .set(waveForms.toJson())
+        .then((value) => showMyToast("Waveform stored"));
+    return waveForms;
+  }
+
+  Future<VoiceMessageInfo?> getVoiceNoteInfo(String path) async {
+    final doc = await FirebaseFirestore.instance
+        .collection("waveForms")
+        .doc(path)
+        .get();
+    if (doc.data() == null) return null;
+    final waveForm = VoiceMessageInfo.fromJson(doc.data()!);
+    return waveForm;
   }
 }

@@ -1,11 +1,9 @@
 import 'package:call_app_flutter/constants.dart';
 import 'package:call_app_flutter/utilities/audio_utils.dart';
-import 'package:call_app_flutter/utilities/chat_utils.dart';
-import 'package:call_app_flutter/utilities/firestorer.dart';
 import 'package:call_app_flutter/widgets/chat_home_popup_menu_item.dart';
+import 'package:call_app_flutter/widgets/confirmation_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_emoji_gif_picker/flutter_emoji_gif_picker.dart';
-import 'package:zego_uikit_prebuilt_call/zego_uikit_prebuilt_call.dart';
 import 'package:zego_zimkit/zego_zimkit.dart';
 
 import 'message_list_page.dart';
@@ -102,6 +100,19 @@ class _ChatHomePageState extends State<ChatHomePage>
                 ),
                 elevation: 2,
                 child: ListTile(
+                  onLongPress: () {
+                    showDialog(
+                      context: context,
+                      builder: (context) => ConfirmationDialog(
+                        onConfirm: () {
+                          ZIMKit.instance
+                              .deleteConversation(con.id, con.type)
+                              .then((value) =>
+                                  showMyToast("Conversation deleted"));
+                        },
+                      ),
+                    );
+                  },
                   onTap: () {
                     Navigator.push(
                       context,
@@ -143,271 +154,6 @@ class _ChatHomePageState extends State<ChatHomePage>
       ),
     );
   }
-
-  Widget zimMessageListPage(
-          context, StateSetter setState, ZIMKitConversation conversation) =>
-      EmojiGifMenuLayout(
-        child: ZIMKitMessageListPage(
-          conversationID: conversation.id,
-          conversationType: conversation.type,
-          editingController: textController,
-          inputFocusNode: node,
-          messageItemBuilder: (context, message, defaultWidget) {
-            if (message.type != ZIMMessageType.text) {
-              return defaultWidget;
-            }
-            bool isMyMessage = message.info.senderUserID ==
-                ZIMKit().currentUser()?.baseInfo.userID;
-            final rowMainAlignment =
-                isMyMessage ? MainAxisAlignment.end : MainAxisAlignment.start;
-            final columnCrossAlignment =
-                isMyMessage ? CrossAxisAlignment.end : CrossAxisAlignment.start;
-            return Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Row(
-                mainAxisAlignment: rowMainAlignment,
-                children: [
-                  if (!isMyMessage)
-                    CircleAvatar(
-                      backgroundImage: NetworkImage(
-                          conversation.avatarUrl.isNotEmpty
-                              ? conversation.avatarUrl
-                              : kDummyImage),
-                    ),
-                  const SizedBox(width: 10),
-                  Column(
-                    crossAxisAlignment: columnCrossAlignment,
-                    children: [
-                      Card(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.only(
-                            topLeft: const Radius.circular(20),
-                            topRight: const Radius.circular(20),
-                            bottomLeft: isMyMessage
-                                ? const Radius.circular(20)
-                                : Radius.zero,
-                            bottomRight: !isMyMessage
-                                ? const Radius.circular(20)
-                                : Radius.zero,
-                          ),
-                        ),
-                        color: isMyMessage ? Colors.blue : Colors.white,
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                              vertical: 10.0, horizontal: 20),
-                          child: Column(
-                            crossAxisAlignment: columnCrossAlignment,
-                            children: [
-                              FutureBuilder(
-                                  future: Firestorer.instance
-                                      .getUserWithId(message.info.senderUserID),
-                                  builder: (context, snap) {
-                                    return Text(
-                                      !snap.hasData
-                                          ? '..'
-                                          : snap.data!.name.characters.first
-                                                  .toUpperCase() +
-                                              snap.data!.name.substring(1),
-                                      style: TextStyle(
-                                          color: isMyMessage
-                                              ? Colors.white60
-                                              : Colors.grey.shade600,
-                                          fontSize: 12),
-                                    );
-                                  }),
-                              const SizedBox(height: 5),
-                              Text(
-                                message.textContent!.text,
-                                style: TextStyle(
-                                    color: isMyMessage
-                                        ? Colors.white
-                                        : Colors.black,
-                                    fontSize: 16),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 5),
-                      defaultLastMessageTimeBuilder(
-                        DateTime.fromMillisecondsSinceEpoch(
-                            message.info.timestamp),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(width: 5),
-                  if (isMyMessage &&
-                      message.info.sentStatus != ZIMMessageSentStatus.sending)
-                    CircleAvatar(
-                      radius: 7,
-                      backgroundColor: message.info.sentStatus ==
-                              ZIMMessageSentStatus.success
-                          ? Colors.blue
-                          : Colors.red,
-                      child: Icon(
-                        message.info.sentStatus == ZIMMessageSentStatus.success
-                            ? Icons.check
-                            : Icons.close,
-                        size: 10,
-                        color: Colors.white,
-                      ),
-                    ),
-                ],
-              ),
-            );
-          },
-          onMessageItemPressd: (c, message, defaultAction) {
-            switch (message.type) {
-              case ZIMMessageType.text:
-                // showMyToast(message.textContent!.text);
-                break;
-              case ZIMMessageType.image:
-                ChatUtils.viewImage(
-                    context, message.imageContent!.fileDownloadUrl);
-                break;
-              case ZIMMessageType.video:
-                break;
-              case ZIMMessageType.file:
-                ChatUtils.saveFileToDevice(
-                        context,
-                        message.fileContent!.fileDownloadUrl,
-                        message.fileContent!.fileName)
-                    .then((value) => showMyToast("file saved at $value"));
-                break;
-              default:
-                showMyToast("file type not mentioned");
-                break;
-            }
-            defaultAction();
-          },
-          appBarBuilder: (context, appBar) {
-            return AppBar(
-              title: Row(
-                children: [
-                  CircleAvatar(
-                    backgroundImage: NetworkImage(
-                        conversation.avatarUrl.isNotEmpty
-                            ? conversation.avatarUrl
-                            : kDummyImage),
-                  ),
-                  const SizedBox(width: 10),
-                  Text(conversation.name),
-                ],
-              ),
-              actions: [
-                if (conversation.type == ZIMConversationType.peer)
-                  ChatUtils.zegoCallInvitationButton(
-                    MediaQuery.of(context).size,
-                    [
-                      ZegoUIKitUser(
-                        id: conversation.id,
-                        name: conversation.name,
-                      ),
-                    ],
-                  ),
-                if (conversation.type == ZIMConversationType.peer)
-                  ChatUtils.zegoCallInvitationButton(
-                    MediaQuery.of(context).size,
-                    [
-                      ZegoUIKitUser(
-                        id: conversation.id,
-                        name: conversation.name,
-                      ),
-                    ],
-                    isVideoCall: true,
-                  ),
-              ],
-            );
-          },
-          inputDecoration: const InputDecoration(
-            hintText: 'Type here...',
-            contentPadding: EdgeInsets.zero,
-            border: InputBorder.none,
-          ),
-          messageInputActions: [
-            ZIMKitMessageInputAction.left(
-              AnimatedBuilder(
-                animation: _animationController!,
-                builder: (context, child) {
-                  return CircleAvatar(
-                    backgroundColor: Colors.blue,
-                    radius: radiusValue,
-                    child: CircleAvatar(
-                      backgroundColor: Colors.white,
-                      radius: radiusValue - 1,
-                      child: Center(
-                        child: IconButton(
-                          padding: EdgeInsets.zero,
-                          icon: Icon(
-                            Icons.mic,
-                            color: isRecoding ? Colors.red : Colors.blue,
-                          ),
-                          onPressed: () async {
-                            setState(() {
-                              isRecoding = !isRecoding;
-                            });
-                            if (!isRecoding) {
-                              _animationController!.forward();
-                              AudioUtils.recordAudio(
-                                  "${conversation.name}-${DateTime.now().millisecondsSinceEpoch.hashCode}");
-                            }
-                          },
-                        ),
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-            ZIMKitMessageInputAction.leftInside(
-              GestureDetector(
-                onTap: () {
-                  if (EmojiGifPickerPanel.isOpened) {
-                    node.unfocus();
-                  } else {
-                    node.requestFocus();
-                  }
-                },
-                child: EmojiGifPickerIcon(
-                  id: "1",
-                  onGifSelected: null,
-                  fromStack: false,
-                  keyboardIcon: const Icon(
-                      Icons.sentiment_satisfied_alt_outlined,
-                      color: Colors.blue),
-                  viewGif: false,
-                  controller: textController,
-                  icon: const Icon(
-                    Icons.sentiment_satisfied_alt_outlined,
-                    color: Colors.black,
-                  ),
-                ),
-              ),
-              // IconButton(
-              //   icon: const Icon(Icons.),
-              //   onPressed: () {
-              //     showEmojiKeyboard = !showEmojiKeyboard;
-              //     setState(() {});
-              //
-              //     // node.requestFocus();
-              //     // node.unfocus();
-              //   },
-              // ),
-            ),
-          ],
-          messageListErrorBuilder: (c, d) {
-            return Center(
-              child: Text(
-                'Some error occurred!',
-                style: TextStyle(color: Colors.grey.shade400),
-              ),
-            );
-          },
-          messageListLoadingBuilder: (c, d) {
-            return kSpinner;
-          },
-        ),
-      );
 
   onConversationLongPress(
       context, conversation, longPressDownDetails, defaultAction) {
