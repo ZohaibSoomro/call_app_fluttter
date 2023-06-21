@@ -1,7 +1,9 @@
 import 'package:call_app_flutter/constants.dart';
 import 'package:call_app_flutter/utilities/audio_utils.dart';
+import 'package:call_app_flutter/utilities/firestorer.dart';
 import 'package:call_app_flutter/widgets/chat_home_popup_menu_item.dart';
 import 'package:call_app_flutter/widgets/confirmation_dialog.dart';
+import 'package:call_app_flutter/widgets/incoming_call_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_emoji_gif_picker/flutter_emoji_gif_picker.dart';
 import 'package:zego_zimkit/zego_zimkit.dart';
@@ -26,11 +28,6 @@ class _ChatHomePageState extends State<ChatHomePage>
 
   bool showEmojiKeyboard = false;
 
-  AnimationController? _animationController;
-  Animation<double>? _animation;
-  bool isRecoding = false;
-  double radiusValue = 15;
-
   @override
   void initState() {
     super.initState();
@@ -41,116 +38,108 @@ class _ChatHomePageState extends State<ChatHomePage>
         print("msla");
       }
     });
-    _animationController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 1),
-    );
-
-    _animation = Tween<double>(begin: 15, end: 20).animate(
-      CurvedAnimation(
-        parent: _animationController!,
-        curve: Curves.easeInOut,
-      ),
-    );
-
-    _animationController?.addListener(() {
-      setState(() {
-        radiusValue = _animation!.value;
-      });
-    });
-
-    _animation!.addStatusListener((status) {
-      if (status == AnimationStatus.completed) {
-        _animationController!.reverse();
-      } else if (status == AnimationStatus.dismissed) {
-        _animationController!.forward();
-      }
-    });
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-    _animationController?.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: () async => false,
-      child: Scaffold(
-        resizeToAvoidBottomInset: true,
-        appBar: AppBar(
-          title: const Text('Conversations'),
-          actions: const [
-            ChatHomePopupMenuButton(),
-          ],
-        ),
-        body: ZIMKitConversationListView(
-          onLongPress: onConversationLongPress,
-          loadingBuilder: (c, w) {
-            return kSpinner;
-          },
-          itemBuilder: (c, con, wid) {
-            return Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 5.0),
-              child: Card(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                elevation: 2,
-                child: ListTile(
-                  onLongPress: () {
-                    showDialog(
-                      context: context,
-                      builder: (context) => ConfirmationDialog(
-                        onConfirm: () {
-                          ZIMKit.instance
-                              .deleteConversation(con.id, con.type)
-                              .then((value) =>
-                                  showMyToast("Conversation deleted"));
-                        },
-                      ),
-                    );
-                  },
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => MessageListPage(
-                            conversation: con, chatHomeContext: context),
-                      ),
-                    );
-                  },
-                  trailing: defaultLastMessageTimeBuilder(
-                    DateTime.fromMillisecondsSinceEpoch(
-                        con.lastMessage!.info.timestamp),
+      child: IncomingCallWidget(
+        child: Scaffold(
+          resizeToAvoidBottomInset: true,
+          appBar: AppBar(
+            title: const Text('Conversations'),
+            actions: const [
+              ChatHomePopupMenuButton(),
+            ],
+          ),
+          body: ZIMKitConversationListView(
+            onLongPress: onConversationLongPress,
+            loadingBuilder: (c, w) {
+              return kSpinner;
+            },
+            itemBuilder: (c, con, wid) {
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 5.0),
+                child: Card(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
                   ),
-                  leading: CircleAvatar(
-                    radius: 21,
-                    backgroundColor: Colors.blue,
-                    child: CircleAvatar(
-                      backgroundImage: NetworkImage(con.avatarUrl.isNotEmpty
-                          ? con.avatarUrl
-                          : kDummyImage),
+                  elevation: 2,
+                  child: ListTile(
+                    contentPadding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    onLongPress: () {
+                      showDialog(
+                        context: context,
+                        builder: (context) => ConfirmationDialog(
+                          onConfirm: () {
+                            ZIMKit.instance
+                                .deleteConversation(con.id, con.type)
+                                .then((value) =>
+                                    showMyToast("Conversation deleted"));
+                          },
+                        ),
+                      );
+                    },
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => MessageListPage(
+                              conversation: con, chatHomeContext: context),
+                        ),
+                      );
+                    },
+                    trailing: defaultLastMessageTimeBuilder(
+                      DateTime.fromMillisecondsSinceEpoch(
+                          con.lastMessage!.info.timestamp),
+                    ),
+                    leading: CircleAvatar(
+                      radius: 21,
+                      backgroundColor: Colors.blue,
+                      child: CircleAvatar(
+                        radius: 20,
+                        backgroundImage: NetworkImage(con.avatarUrl.isNotEmpty
+                            ? con.avatarUrl
+                            : kDummyImage),
+                      ),
+                    ),
+                    title: Text(
+                      con.name,
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (con.type == ZIMConversationType.group)
+                          FutureBuilder(
+                              future: Firestorer.instance.getUserWithId(
+                                  con.lastMessage!.info.senderUserID),
+                              builder: (context, snap) {
+                                if (!snap.hasData) {
+                                  return const SizedBox.shrink();
+                                }
+                                return Text("~${snap.data!.name}");
+                              }),
+                        Text(con.lastMessage!.type == ZIMMessageType.text
+                            ? con.lastMessage!.textContent!.text
+                            : "[${con.lastMessage!.type.name}]"),
+                      ],
                     ),
                   ),
-                  title: Text(con.name),
-                  subtitle: Text(con.lastMessage!.type == ZIMMessageType.text
-                      ? con.lastMessage!.textContent!.text
-                      : "[${con.lastMessage!.type.name}]"),
                 ),
-              ),
-            );
-          },
-          onPressed: (context, conversation, defaultAction) {
-            Navigator.push(context, MaterialPageRoute(
-              builder: (context) {
-                return MessageListPage(
-                    conversation: conversation, chatHomeContext: context);
-              },
-            ));
-          },
+              );
+            },
+            onPressed: (context, conversation, defaultAction) {
+              Navigator.push(context, MaterialPageRoute(
+                builder: (context) {
+                  return MessageListPage(
+                      conversation: conversation, chatHomeContext: context);
+                },
+              ));
+            },
+          ),
         ),
       ),
     );

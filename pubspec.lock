@@ -1057,10 +1057,10 @@ packages:
     dependency: transitive
     description:
       name: zego_uikit
-      sha256: "3b84f8393552ec348d16579359345a8f97d157179678f5f904328c009cd8452d"
+      sha256: f2fad493fb40de84a559cf82a61353dc797858b688af749d5613adc2f64f9f59
       url: "https://pub.dev"
     source: hosted
-    version: "2.5.18"
+    version: "2.5.21"
   zego_uikit_prebuilt_call:
     dependency: "direct main"
     description:
@@ -1069,6 +1069,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.5.2"
+  zego_uikit_prebuilt_video_conference:
+    dependency: "direct main"
+    description:
+      name: zego_uikit_prebuilt_video_conference
+      sha256: "577b4d0be967f7ea64e8d90ee1b5d82af8d77e3e0ee6e332293c8ac8b241f3b4"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.3.0"
   zego_uikit_signaling_plugin:
     dependency: "direct main"
     description:

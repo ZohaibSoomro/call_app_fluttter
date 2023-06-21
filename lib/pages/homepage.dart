@@ -48,16 +48,17 @@ class _HomePageState extends State<HomePage> {
       ),
       body: IncomingCallWidget(
         child: StreamBuilder(
-            stream: Firestorer.instance.collection.snapshots(),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return kSpinner;
-              }
+          stream: Firestorer.instance.collection.snapshots(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return kSpinner;
+            }
 
-              return ListView(
-                children: parseUserDocumentsToWidgets(snapshot.data!.docs),
-              );
-            }),
+            return ListView(
+              children: parseUserDocumentsToWidgets(snapshot.data!.docs),
+            );
+          },
+        ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {

@@ -33,6 +33,7 @@ dependencies:
   flutter_emoji_gif_picker: ^0.1.4
   audio_waveforms: ^1.0.3
   audioplayers: ^1.2.0
+  zego_uikit_prebuilt_video_conference: ^2.3.0
 
 
 dev_dependencies:

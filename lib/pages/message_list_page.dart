@@ -103,33 +103,18 @@ class _MessageListPageState extends State<MessageListPage>
           if (message.type == ZIMMessageType.file &&
               (file!.fileName.endsWith(".wav") ||
                   file.fileName.endsWith(".m4a"))) {
-            // return VoiceMessageWidget(
-            //   filePath: file.fileLocalPath,
-            //   downloadUrl: file.fileDownloadUrl,
-            //   defaultWidget: defaultWidget,
-            //   isMyMessage: isMyMessage,
-            //   msgBaseInfo: message.info,
-            // );
-            return InkWell(
-                borderRadius: ChatUtils.msgBorderRadius(message.isMine),
-                onLongPress: () {
-                  showDialog(
-                      context: context,
-                      builder: (context) => ConfirmationDialog(
-                            onConfirm: () {
-                              ZIMKit.instance.deleteMessage([message]).then(
-                                  (value) => showMyToast("Msg deleted"));
-                            },
-                          ));
-                },
+            return buildDeleteMsgWidget(message,
                 child: VoiceMessageItem(message: message));
           }
           if (message.type != ZIMMessageType.text) {
-            return defaultWidget;
+            return buildDeleteMsgWidget(message, child: defaultWidget);
           }
 
-          return buildTextMessage(
-              rowMainAlignment, isMyMessage, columnCrossAlignment, message);
+          return buildDeleteMsgWidget(
+            message,
+            child: buildTextMessage(
+                rowMainAlignment, isMyMessage, columnCrossAlignment, message),
+          );
         },
         onMessageItemPressd: onMessagePressed,
         appBarBuilder: (context, appBar) {
@@ -365,18 +350,9 @@ class _MessageListPageState extends State<MessageListPage>
       audioPath = await AudioUtils.stopRecording();
       showMyToast("audio file saved at $audioPath");
       final file = File(audioPath!);
-      // PlatformFile platformFile = PlatformFile(
-      //   name: file.path.split('/').last,
-      //   path: file.absolute.path,
-      //   size: file.lengthSync(),
-      //   bytes: file.readAsBytesSync(),
-      // );
+
       print("audio file saved at $audioPath");
-      // await ZIMKit.instance.sendFileMessage(
-      //   widget.conversation.id,
-      //   widget.conversation.type,
-      //   [platformFile],
-      // );
+
       _animationController!.reset();
       isRecording = false;
       if (mounted) {
@@ -437,8 +413,24 @@ class _MessageListPageState extends State<MessageListPage>
     }
     defaultAction();
   }
-}
 
+  Widget buildDeleteMsgWidget(ZIMKitMessage message, {required Widget child}) {
+    return InkWell(
+      borderRadius: ChatUtils.msgBorderRadius(message.isMine),
+      onLongPress: () {
+        showDialog(
+            context: context,
+            builder: (context) => ConfirmationDialog(
+                  onConfirm: () {
+                    ZIMKit.instance.deleteMessage([message]).then(
+                        (value) => showMyToast("Msg deleted"));
+                  },
+                ));
+      },
+      child: child,
+    );
+  }
+}
 // final future = AudioUtils.controllerForAudioFile(
 //               file.fileLocalPath,
 //             );
@@ -512,3 +504,23 @@ class _MessageListPageState extends State<MessageListPage>
 //                     ),
 //                   );
 //                 },);
+
+// return VoiceMessageWidget(
+//   filePath: file.fileLocalPath,
+//   downloadUrl: file.fileDownloadUrl,
+//   defaultWidget: defaultWidget,
+//   isMyMessage: isMyMessage,
+//   msgBaseInfo: message.info,
+// );
+
+// PlatformFile platformFile = PlatformFile(
+//   name: file.path.split('/').last,
+//   path: file.absolute.path,
+//   size: file.lengthSync(),
+//   bytes: file.readAsBytesSync(),
+// );
+// await ZIMKit.instance.sendFileMessage(
+//   widget.conversation.id,
+//   widget.conversation.type,
+//   [platformFile],
+// );
